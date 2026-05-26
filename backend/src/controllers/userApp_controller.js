@@ -1,5 +1,6 @@
 import userApp  from "../models/userApp.js";
 import { sendMailToRecoveryPassword, sendMailToRegister} from "../helpers/sendMail.js";
+import { crearTokenJWT } from "../middleware/JWT.js"
 
 const registro = async (req, res) => {
     try{
@@ -110,7 +111,46 @@ const crearNuevoPassword = async (req,res)=>{
     }
 }
 
+const login = async(req,res)=>{
 
+    try {
+        // Paso 1
+        const {email,password} = req.body
+        // Paso 2
+        if (Object.values(req.body).includes("")) return res.status(404).json({msg:"Debes llenar todos los campos"})
+
+        const userAppBDD = await userApp.findOne({email}).select("-status -__v -token -updatedAt -createdAt")
+
+        if(!userAppBDD) return res.status(404).json({msg:"El usuario no se encuentra registrado"})
+
+        if(!userAppBDD.confirmEmail) return res.status(403).json({msg:"Debes verificar tu cuenta antes de iniciar sesión"})
+        const verificarPassword = await userAppBDD.matchPassword(password)
+        if(!verificarPassword) return res.status(401).json({msg:"El password no es correcto"})
+        // Paso 3
+        const {nombre,apellido,direccion,celular,_id,rol} = userAppBDD
+        const token = crearTokenJWT(userAppBDD._id,userAppBDD.rol)
+        // Paso 4
+        res.status(200).json({
+            token,
+            rol,
+            nombre,
+            apellido,
+            direccion,
+            celular,
+            _id,
+            email: userAppBDD.email
+        })
+
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ msg: `❌ Error en el servidor - ${error}` })
+    }
+}
+
+const perfil =(req,res)=>{
+	const {token,confirmEmail,createdAt,updatedAt,__v,...datosPerfil} = req.userAppHeader
+    res.status(200).json(datosPerfil)
+}
 
 
 export {
@@ -118,6 +158,7 @@ export {
     confirmarMail,
     recuperarPassword,
     comprobarTokenPasword,
-    crearNuevoPassword
-
+    crearNuevoPassword,
+    login,
+    perfil
 }

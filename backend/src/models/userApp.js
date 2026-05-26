@@ -17,11 +17,6 @@ const userAppSchema = new Schema({
         default: true,
         trim:true
     },
-    celular:{
-        type: String,
-        default: true,
-        trim: true
-    },
     celular: {
         type: String,
         trim: true,
