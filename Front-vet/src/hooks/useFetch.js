@@ -22,7 +22,7 @@ export function useFetch() {
             })
 
             toast.dismiss(loadingToast)
-            toast.success(response?.data?.msg)
+            if(response?.data?.msg) toast.success(response.data.msg)
             return response?.data
 
         } catch (error) {

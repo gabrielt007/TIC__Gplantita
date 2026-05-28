@@ -11,7 +11,7 @@ export const Confirm = () => {
     const { token } = useParams()
     
     const verifyToken = async()=>{
-        const url = `${import.meta.env.VITE_BACKEND_URL}confirmar/${token}`
+        const url = `${import.meta.env.VITE_BACKEND_URL}/confirmar/${token}`
         await fetchDataBackend(url)
     }
 

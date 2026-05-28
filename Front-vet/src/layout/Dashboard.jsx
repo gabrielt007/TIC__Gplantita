@@ -1,9 +1,13 @@
 import { Link, Outlet, useLocation } from 'react-router'
+import storeAuth from '../context/storeAuth'
+import storeProfile from '../context/storeProfile'
 
 
 const Dashboard = () => {
     const location = useLocation()
     const urlActual = location.pathname
+    const { clearToken } = storeAuth()
+    const{user} = storeProfile()
 
     return (
         <div className='md:flex md:min-h-screen'>
@@ -19,11 +23,11 @@ const Dashboard = () => {
 
                 {/* Nombre de usuario */}
                 <p className='text-green-300 text-center my-4 text-sm'>
-                    <span className='bg-green-400 w-3 h-3 inline-block rounded-full'></span> Bienvenido -
+                    <span className='bg-green-400 w-3 h-3 inline-block rounded-full'></span> Bienvenido - {user?.nombre} {user?.apellido} 
                 </p>
 
                 {/* Rol de usuario */}
-                <p className='text-green-300 text-center my-4 text-sm'>Rol -</p>
+                <p className='text-green-300 text-center my-4 text-sm'>Rol - {user?.rol}</p>
 
                 <hr className="mt-5 border-green-600" />
 
@@ -68,7 +72,7 @@ const Dashboard = () => {
                 {/* Menú de navegación superior */}
                 <div className='bg-green-900 py-2 flex md:justify-end items-center gap-5 justify-center'>
                     <div className='text-md font-semibold text-green-100'>
-                        Usuario -
+                         Usuario - {user?.nombre}
                     </div>
                     <div>
                         <div className="border-2 border-green-400 rounded-full w-[50px] h-[50px] flex items-center justify-center text-2xl bg-green-800">
@@ -76,7 +80,8 @@ const Dashboard = () => {
                         </div>
                     </div>
                     <div>
-                        <Link to='/' className="text-white mr-3 text-md block hover:bg-red-900 text-center bg-red-800 px-4 py-1 rounded-lg">Salir</Link>
+                        <Link to='/' className=" text-white mr-3 text-md block hover:bg-red-900 text-center
+                        bg-red-800 px-4 py-1 rounded-lg" onClick={() => clearToken()}  >Salir</Link>
                     </div>
                 </div>
 
