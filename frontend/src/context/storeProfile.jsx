@@ -25,6 +25,26 @@ const storeProfile = create((set) => ({
         } catch (error) {
             console.error(error)
         }
+    },
+    updateProfile:async(url, data)=>{
+        try {
+            const respuesta = await axios.put(url, data, getAuthHeaders())
+            set({ user: respuesta.data })
+            toast.success("Perfil actualizado correctamente")
+        } catch (error) {
+            console.log(error)
+            toast.error(error.response?.data?.msg)
+        }
+    },
+    
+    updatePasswordProfile:async(url,data)=>{
+        try {
+            const respuesta = await axios.put(url, data, getAuthHeaders())
+            return respuesta
+        } catch (error) {
+            console.log(error)
+            toast.error(error.response?.data?.msg)
+        }
     }
     })
 )
