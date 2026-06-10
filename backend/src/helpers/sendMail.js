@@ -31,7 +31,22 @@ const sendMailToRecoveryPassword = (userMail, token) => {
         `
         )
 }
+const sendMailToOwner = (userMail, passwordPropietario) => {
+    return sendMail(
+        userMail,
+        "Bienvenido a greenHOUSE ☘",
+        `
+            <h1>Estas son tus credenciales</h1>
+            <p>Hola, aquí están tus credenciales:</p>
+            <p>Usuario: ${userMail}</p>
+            <p>Contraseña: ${passwordPropietario}</p>
+            <hr>
+            <footer>El equipo de greenHOUSE ☘ te da la más cordial bienvenida.</footer>
+        `
+    )
+}
 export {
     sendMailToRegister,
-    sendMailToRecoveryPassword
+    sendMailToRecoveryPassword,
+    sendMailToOwner
 }
