@@ -88,10 +88,10 @@ const Login = () => {
                         <hr className="flex-1" />
                     </div>
 
-                    <button className="w-full mt-5 flex items-center justify-center border py-2 rounded-xl text-sm hover:bg-black hover:text-white">
+                    {/*<button className="w-full mt-5 flex items-center justify-center border py-2 rounded-xl text-sm hover:bg-black hover:text-white">
                         <img className="w-5 mr-2" src="https://cdn-icons-png.flaticon.com/512/281/281764.png" alt="google" />
                         Ingresar con Google
-                    </button>
+                    </button>*/}
 
                     <div className="mt-5 text-xs border-b-2 py-4 text-left">
                         <Link to="/forgot/id" className="underline text-gray-400 hover:text-gray-900">

@@ -59,7 +59,19 @@ export const Register = () => {
                                 placeholder="Ingresa tu nombre"
                                 className="block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-500"
                                 {...register("nombre", {
-                                    required: "El nombre es obligatorio"
+                                    required: "El nombre es obligatorio",
+                                    pattern: {
+                                        value: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/,
+                                        message: "El nombre no puede contener números ni caracteres especiales"
+                                    },
+                                    minLength: {
+                                        value: 3,
+                                        message: "El nombre debe tener al menos 3 caracteres"
+                                    },
+                                    maxLength: {
+                                        value: 20,
+                                        message: "El nombre debe tener como máximo 20 caracteres"
+                                    }
                                 })}
                             />
 
@@ -81,7 +93,19 @@ export const Register = () => {
                                 placeholder="Ingresa tu apellido"
                                 className="block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-500"
                                 {...register("apellido", {
-                                    required: "El apellido es obligatorio"
+                                    required: "El apellido es obligatorio",
+                                    pattern: {
+                                        value: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/,
+                                        message: "El apellido no puede contener números ni caracteres especiales"
+                                    },
+                                    minLength: {
+                                        value: 3,
+                                        message: "El apellido debe tener al menos 3 caracteres"
+                                    },
+                                    maxLength: {
+                                        value: 20,
+                                        message: "El apellido debe tener como máximo 20 caracteres"
+                                    }
                                 })}
                             />
 
@@ -126,7 +150,19 @@ export const Register = () => {
                                 placeholder="Ingresa tu celular"
                                 className="block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-500"
                                 {...register("celular", {
-                                    required: "El celular es obligatorio"
+                                    required: "El celular es obligatorio",
+                                    pattern: {
+                                        value: /^[0-9]{10}$/,
+                                        message: "El celular debe tener 10 dígitos"
+                                    },
+                                    minLength: {
+                                        value: 10,
+                                        message: "El celular debe tener al menos 10 dígitos"
+                                    },
+                                    maxLength: {
+                                        value: 10,
+                                        message: "El celular debe tener como máximo 10 dígitos"
+                                    }
                                 })}
                             />
 
@@ -148,7 +184,11 @@ export const Register = () => {
                                 placeholder="Ingresa tu correo electrónico"
                                 className="block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-500"
                                 {...register("email", {
-                                    required: "El correo es obligatorio"
+                                    required: "El correo es obligatorio",
+                                    pattern: {
+                                        value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                                        message: "El formato de correo no es válido"
+                                    }
                                 })}
                             />
 
@@ -173,7 +213,15 @@ export const Register = () => {
                                     placeholder="************"
                                     className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10"
                                     {...register("password", {
-                                        required: "La contraseña es obligatoria"
+                                        required: "La contraseña es obligatoria",
+                                        minLength: {
+                                            value: 8,
+                                            message: "La contraseña debe tener al menos 8 caracteres"
+                                        },
+                                        maxLength: {
+                                            value: 16,
+                                            message: "La contraseña debe tener como máximo 16 caracteres"
+                                        }
                                     })}
                                 />
 
