@@ -10,7 +10,7 @@ const FormularioPerfil = () => {
     const { register, handleSubmit, reset, formState: { errors } } = useForm()
 
     const updateUser = (dataForm) => {
-        const url = `${import.meta.env.VITE_BACKEND_URL}/actualizarperfil/${user._id}`
+        const url = `${import.meta.env.VITE_BACKEND_URL}/user/actualizarperfil/${user._id}`
         updateProfile(url,dataForm)
     }
 
@@ -80,7 +80,7 @@ const FormularioPerfil = () => {
             <div>
                 <label className="mb-2 block text-sm font-semibold">Correo electrónico</label>
                 <input type="email" placeholder="Ingresa tu correo" className="block w-full 
-                rounded-md border border-gray-300 py-1 px-2 text-gray-500 mb-5"
+                rounded-md border border-gray-300 py-1 px-2 text-gray-500 mb-5" disabled
                 />
             </div>
 

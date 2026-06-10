@@ -1,6 +1,7 @@
 import userApp  from "../models/userApp.js";
 import { sendMailToRecoveryPassword, sendMailToRegister} from "../helpers/sendMail.js";
 import { crearTokenJWT } from "../middleware/JWT.js"
+import mongoose from "mongoose"
 
 const registro = async (req, res) => {
     try{
@@ -18,7 +19,7 @@ const registro = async (req, res) => {
         const token = nuevoUserApp.createToken();
         await sendMailToRegister(email, token);
         await nuevoUserApp.save();
-        res.status(200).json({ msg : "Revisa tu correo electrónico para confirmar tu ceunta"})
+        res.status(200).json({ msg : "Revisa tu correo electrónico para confirmar tu cuenta"})
 
     }catch (error){
         res.status(500).json({msg: `Error en el servidor - ${error}`});
@@ -153,6 +154,58 @@ const perfil =(req,res)=>{
     res.status(200).json(datosPerfil)
 }
 
+const actualizarPerfil = async (req,res)=>{
+
+    try {
+        const {id} = req.params
+        const {nombre,apellido,direccion,celular,email} = req.body
+        if( !mongoose.Types.ObjectId.isValid(id) ) return res.status(400).json({msg:`ID inválido: ${id}`})
+        const userAppBDD = await userApp.findById(id)
+        if(!userAppBDD) return res.status(404).json({ msg: `No existe el veterinario con ID ${id}` })
+        if (Object.values(req.body).includes("")) return res.status(400).json({msg:"Debes llenar todos los campos"})
+        if (userAppBDD.email !== email)
+        {
+            const emailExistente  = await userApp.findOne({email})
+            if (emailExistente )
+            {
+                return res.status(404).json({msg:`El email ya se encuentra registrado`})  
+            }
+        }
+        userAppBDD.nombre = nombre ?? userAppBDD.nombre
+        userAppBDD.apellido = apellido ?? userAppBDD.apellido
+        userAppBDD.direccion = direccion ?? userAppBDD.direccion
+        userAppBDD.celular = celular ?? userAppBDD.celular
+        userAppBDD.email = email ?? userAppBDD.email
+        await userAppBDD.save()
+        res.status(200).json(userAppBDD)
+        
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ msg: `❌ Error en el servidor - ${error}` })
+    }
+}
+
+const actualizarPassword = async (req, res) => {
+    try {
+
+        const {id} = req.params
+        const {passwordActual, confirmPassword, repeatComfirmPassword} = req.body
+
+        if(Object.values(req.body).includes("")) return res.status(404).json({msg:"Debe de llenar todos los campos"})
+        if(!mongoose.Types.ObjectId.isValid(id)) return res.status(404).json({msg:"El id no es valido"})
+        const userAppBDD = await userApp.findById(id)
+        if(!userAppBDD) return res.status(404).json({msg:`No existe el usuario con ID ${id}`})
+        const verificarPassword = await userAppBDD.matchPassword(passwordActual)
+        if(!verificarPassword) return res.status(404).json({msg:`Lo sentimos, el password actual no es el correcto`})
+        if(confirmPassword !== repeatComfirmPassword) return res.status(404).json({msg:`Los password no coinciden`})
+        userAppBDD.password = await userAppBDD.encryptPassword(confirmPassword)
+        await userAppBDD.save() 
+        res.status(200).json({msg:`Password Actualizado Correctamente`})
+    } catch (error) {
+        res.status(500).json({ msg: `❌ Error en el servidor - ${error} `})
+    }
+}
+
 
 export {
     registro,
@@ -161,5 +214,7 @@ export {
     comprobarTokenPasword,
     crearNuevoPassword,
     login,
-    perfil
+    perfil,
+    actualizarPerfil,
+    actualizarPassword
 }

@@ -40,6 +40,7 @@ const storeProfile = create((set) => ({
     updatePasswordProfile:async(url,data)=>{
         try {
             const respuesta = await axios.put(url, data, getAuthHeaders())
+            toast.success("Contraseña actualizada exitosamente")
             return respuesta
         } catch (error) {
             console.log(error)

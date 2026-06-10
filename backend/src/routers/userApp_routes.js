@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { comprobarTokenPasword, confirmarMail, crearNuevoPassword, recuperarPassword, registro, login, perfil } 
+import { comprobarTokenPasword, confirmarMail, crearNuevoPassword, recuperarPassword, registro, login, perfil, actualizarPerfil,actualizarPassword  } 
 from '../controllers/userApp_controller.js'
 import { verificarTokenJWT } from "../middleware/JWT.js"
 
@@ -14,5 +14,8 @@ routerUserApp.get('/recuperarpassword/:token',comprobarTokenPasword)
 routerUserApp.post('/nuevopassword/:token',crearNuevoPassword)
 routerUserApp.post('/user/login',login)
 routerUserApp.get('/user/perfil',verificarTokenJWT,perfil)
+
+routerUserApp.put('/user/actualizarperfil/:id',verificarTokenJWT,actualizarPerfil)
+routerUserApp.put("/user/actualizarpassword/:id", verificarTokenJWT, actualizarPassword)
 export default routerUserApp
 

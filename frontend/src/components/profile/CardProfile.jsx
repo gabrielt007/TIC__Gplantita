@@ -46,7 +46,7 @@ export const CardProfile = () => {
             
             {/* Campo Correo Electrónico */}
             <div className="self-start">
-                <b>Correo:</b><p className="inline-block ml-3">{user?.email}</p>
+                <b>Correo:</b><p className="inline-block ml-3" >{user?.email}</p>
             </div>
         
         </div>
