@@ -11,7 +11,21 @@ const subirImagenCloudinary = async (filePath, folder = "Cultivos") =>{
 
 }
 
+const subirBase64Cloudinary = async (base64, folder = "Cultivo")=>{
+    const buffer = Buffer.from(base64.replace(/^data:image\/[^;]+;base64,/,''), "base64")
+    const {secure_url} = new Promise((resolve, reject)=> {
+        const stream = cloudinary.uploader.upload_stream({folder, resource_type: "auto"}, (err, res)=>{
+            if(err) reject(err)
+            else resolve(res)
+        })
+        stream.end(buffer)
+    })
+    return {secure_url}
+
+}
+
 export { 
-    subirImagenCloudinary 
+    subirImagenCloudinary,
+    subirBase64Cloudinary
 }
 

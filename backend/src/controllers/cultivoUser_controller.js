@@ -28,6 +28,10 @@ try{
         nuevoCultivo.avatarCultivo = secure_url
         nuevoCultivo.avatarCultivoID = public_id
     }
+    if(req.body?.avatarCultivo){
+        const {secure_url} = await subirBase64Cloudinary(req.body.avatarCultivo)
+        nuevoCultivo.avatarCultivo = secure_url
+    }
 
     await sendMailToOwner(emailPropietario, "GH"+password)
 
@@ -43,6 +47,25 @@ try{
 
 }
 
+const listarCultivos = async (req, res)=>{
+    try {
+
+
+
+
+
+
+
+        const cultivos = await cultivoUser.find({estadoCultivo:true,usuario:req.userAppHeader._id}).select("-passwordPropietario -__v -createdAt -updatedAt").populate("usuario", "nombre")
+
+        res.status(200).json(cultivos)
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({msg: "Error al listar los cultivos"})
+    }
+}
+
 export {
-    registrarCultivo
+    registrarCultivo,
+    listarCultivos
 }

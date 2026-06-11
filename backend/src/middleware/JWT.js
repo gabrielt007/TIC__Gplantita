@@ -30,6 +30,12 @@ const verificarTokenJWT = async (req, res, next) => {
             req.userAppHeader = userAppBDD
             next()
         }
+        else{
+            const cultivoBDD = await cultivoUser.findById(id).lean().select("-password")
+            if (!cultivoBDD) return res.status(401).json({ msg: "Cultivador no encontrado" })          
+            req.cultivoHeader = cultivoBDD
+            next()
+        }
     } catch (error) {
         console.log(error)
         return res.status(401).json({ msg: `Token inválido o expirado - ${error}` })

@@ -67,8 +67,8 @@ const cultivoSchema = new Schema({
         required: true
     },
     estadoCultivo: {
-        type: String,
-        default: "activo",
+        type: Boolean,
+        default: false,
         required: true
     },
     tiempoCosecha: {
