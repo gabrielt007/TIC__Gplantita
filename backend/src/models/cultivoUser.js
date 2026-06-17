@@ -4,44 +4,43 @@ import bcrypt from "bcrypt";
 const cultivoSchema = new Schema({
     nombrePropietario: {
         type: String,
-        required: true,
+        required: false,
         trim: true
     },
     passwordPropietario: {
         type: String,
-        required: true,
+        required: false,
         trim: true
     },
     nombreCultivo: {
         type: String,
-        required: true,
+        required: false,
         trim: true,
-        required: true
     },
     tipoPlanta: {
         type: String,
-        required: true,
-        trim: true,
-        required: true
+        required: false,
+        trim: true
+
     },
     cantidad: {
         type: String,
         default: 1,
-        required: true
+        required: false
     },
     nivelhumedad: {
         type: String,
-        required: true,
+        required: false,
         trim: true
     },
     nivelRiego: {
         type: String,
-        required: true,
+        required: false,
         trim: true
     },
     nivelLuz: {
         type: String,
-        required: true,
+        required: false,
         trim: true
     },
     avatarCultivo: {
@@ -59,36 +58,36 @@ const cultivoSchema = new Schema({
     detalleCultivo: {
         type: String,
         trim: true,
-        required: true
+        required: false
     },
     fechaIngresoCultivo: {
         type: Date,
         default: Date.now,
-        required: true
+        required: false
     },
     estadoCultivo: {
         type: Boolean,
         default: false,
-        required: true
+        required: false
     },
     tiempoCosecha: {
         type: String,
-        required: true,
+        required: false,
         trim: true
     },  
     estadoMadurezCultivo: {
         type: String,
-        required: true,
+        required: false,
         trim: true
     },
     usuario: {
         type: Schema.Types.ObjectId,
         ref: "userApp",
-        required: true
+        required: false
     },
     emailPropietario: {
         type: String,
-        required: true,
+        required: false,
         trim: true
     }
 },
