@@ -1,6 +1,8 @@
 import { sendMailToOwner } from '../helpers/sendMail.js'
+import {subirImagenCloudinary, subirBase64Cloudinary} from '../helpers/uploadCloudinary.js';
 import cultivoUser from '../models/cultivoUser.js'
 import mongoose from 'mongoose';
+
 
 const registrarCultivo = async(req, res) => {
 try{
@@ -24,8 +26,8 @@ try{
             usuario: req.userAppHeader._id
     })
     
-    if(req.files?.image){
-        const {secure_url, public_id} = await subirImagenCloudinary(req.files.image.tempFilePath)
+    if(req.files?.imagen){
+        const {secure_url, public_id} = await subirImagenCloudinary(req.files.imagen.tempFilePath)
         nuevoCultivo.avatarCultivo = secure_url
         nuevoCultivo.avatarCultivoID = public_id
     }
