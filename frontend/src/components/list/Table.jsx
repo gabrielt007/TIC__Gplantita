@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom"
 import cultivoUser from "../../../../backend/src/models/cultivoUser"
 import {useParams} from "react-router-dom"
 import { useEffect } from "react"
-
+import { fetchDataBackend } from "../../hooks/useFetch"
+import {toastContainer, toast} from "react-toastify"
 
 
 const Details =() =>{
@@ -32,6 +33,30 @@ const Details =() =>{
 
 }
 
+
+const deleteCultivo = async(id) => {
+    const confirmDelete = confirm("¿Estas seguro de eliminar el cultivo?")
+    if(confirmDelete){
+        const url = `${import.meta.env.VITE_BACKEND_URL}/cultivos/eliminar/${id}`
+        const storedUser = JSON.parse(localStorage.getItem("auth-token"))
+        const options = {
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${storedUser.token}`
+            }
+        }
+
+        const data = {
+            tiempoCosecha: new Date().toISOString()
+        }
+
+        await fetchDataBackend(url, data, "DELETE", options.headers)
+
+        setCultivos( (prevCultivos)=> prevCultivos.filter(cultivo => cultivo._id !== id))
+    }
+}
+
+
 const Table = () => {
 
     const navigate = useNavigate()
@@ -40,7 +65,7 @@ const Table = () => {
 
 
 
-0
+
 
                                                                                                                                         
 
@@ -76,6 +101,7 @@ const Table = () => {
                         <MdDeleteForever
                             title="Eliminar"
                             className="h-7 w-7 text-red-900 cursor-pointer inline-block hover:text-red-600"
+                            onClick={()=>deleteCultivo(cultivoUser._id)}
                         />
                     </td>
                 </tr>

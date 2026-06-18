@@ -121,9 +121,66 @@ const eliminarCultivo = async (req, res) => {
 }
 
 
+const login = async (req,res) => {
+    try {
+
+        const {emailPropietario, passwordPropietario} = req.body
+        if(Object.values(req.body).includes("")){
+            return res.status(400).json({msg: "Lo sentimos, debes llenar todos los campos del formulario"})
+        }
+
+        const cultivoDB = await cultivoUser.findOne({emailPropietario})//////
+
+        if(!cultivoDB){
+            return res.status(400).json({msg: "Lo sentimos, el usuario no existe"})
+        }
+
+        const passDB = await cultivoDB.matchPassword(passwordPropietario)/////
+
+        if(!passDB){
+            return res.status(400).json({msg: "Lo sentimos, la contraseña es incorrecta"})
+        }
+
+        const token = crearTokenJWT(cultivoDB._id, cultivoDB.rol)
+
+        const {rol, _id} = cultivoDB
+
+        res.status(200).json({
+            token,
+            rol,
+            _id
+        })
+        
+
+        
+    } catch (error) {
+        
+    }
+}
+
+const perfil = (req, res) =>{
+    try {
+        const {_id, emailPropietario, rol} = req.cultivoHeader
+
+        res.status(200).json({
+            _id,
+            emailPropietario,
+            rol
+        })
+        
+
+    } catch (error) {
+        
+    }
+}
+
+
+
 export {
     registrarCultivo,
     listarCultivos,
     detalleCultivo,
-    eliminarCultivo
+    eliminarCultivo,
+    login,
+    perfil
 }
