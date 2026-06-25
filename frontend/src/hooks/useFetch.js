@@ -37,3 +37,5 @@ export function useFetch() {
 
     return {fetchDataBackend,loading }
 }
+
+export default useFetch

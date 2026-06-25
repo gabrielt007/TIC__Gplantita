@@ -1,10 +1,9 @@
 import { MdDeleteForever, MdInfo, MdPublishedWithChanges } from "react-icons/md"
 import { useNavigate } from "react-router-dom"
-import cultivoUser from "../../../../backend/src/models/cultivoUser"
 import {useParams} from "react-router-dom"
 import { useEffect } from "react"
-import { fetchDataBackend } from "../../hooks/useFetch"
-import {toastContainer, toast} from "react-toastify"
+import useFetch from "../../hooks/useFetch"
+
 
 
 const Details =() =>{

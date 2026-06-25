@@ -83,12 +83,20 @@ const cultivoSchema = new Schema({
     usuario: {
         type: Schema.Types.ObjectId,
         ref: "userApp",
-        required: false
+        required: true
     },
     emailPropietario: {
         type: String,
         required: false,
         trim: true
+    },
+    rol: {
+        type: String,
+        default: "cultivo"
+    },
+    token: {
+        type: String,
+        default: null
     }
 },
 {
@@ -100,7 +108,13 @@ cultivoSchema.methods.encryptPassword = async function(password) {
 }
 
 cultivoSchema.methods.matchPassword = async function(password) {
-    return await bcrypt.compare(password, this.password)
+    return await bcrypt.compare(password, this.passwordPropietario)
+}
+
+cultivoSchema.methods.createToken = function() {
+    const tokenGenerado = Math.random().toString(36).slice(2)
+    this.token = tokenGenerado
+    return tokenGenerado
 }
 
 export default model("cultivoUser", cultivoSchema)

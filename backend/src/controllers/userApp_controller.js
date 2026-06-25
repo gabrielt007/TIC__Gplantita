@@ -130,6 +130,7 @@ const login = async(req,res)=>{
         // Paso 3
         const {nombre,apellido,direccion,celular,_id,rol} = userAppBDD
         const token = crearTokenJWT(userAppBDD._id,userAppBDD.rol)
+
         // Paso 4
         res.status(200).json({
             msg: "Inicio de sesión exitoso",

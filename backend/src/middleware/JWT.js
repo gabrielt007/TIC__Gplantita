@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken"
 import userApp from "../models/userApp.js"
+import cultivoUser from "../models/cultivoUser.js"
 
 
 /**
@@ -28,6 +29,12 @@ const verificarTokenJWT = async (req, res, next) => {
             const userAppBDD = await userApp.findById(id).lean().select("-password")
             if (!userAppBDD) return res.status(401).json({ msg: "Usuario no encontrado" })
             req.userAppHeader = userAppBDD
+            next()
+        } 
+        else if(rol === "cultivo"){
+            const cultivoBDD = await cultivoUser.findById(id).lean().select("-password")
+            if (!cultivoBDD) return res.status(401).json({ msg: "Cultivador no encontrado" })          
+            req.cultivoHeader = cultivoBDD
             next()
         }
         else{
