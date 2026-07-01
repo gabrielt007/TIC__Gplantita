@@ -1,38 +1,53 @@
-
 import CardPassword from '../components/profile/CardPassword'
 import { CardProfile } from '../components/profile/CardProfile'
+import { CardProfileOwner } from '../components/profile/CardProfileOwner'
 import FormProfile from '../components/profile/FormProfile'
+import storeProfile from '../context/storeProfile'
 
 
 const Profile = () => {
+
+    const { user } = storeProfile()
+
     return (
-        <>       
+        <>
             <div>
                 <h1 className='font-black text-4xl text-gray-500'>Perfil</h1>
-                <hr className='x'/>
+                <hr className='my-4'/>
                 <p className='mb-8'>Este módulo te permite gestionar el perfil del usuario</p>
             </div>
 
+            {
+                user?.rol === "cultivo"
 
-            <div className='flex justify-around gap-x-8 flex-wrap gap-y-8 md:flex-nowrap'>
+                    // Propietario del cultivo → solo muestra su tarjeta de datos
+                    ? (
+                        <div className='flex justify-center'>
+                            <div className='w-full md:w-1/3'>
+                                <CardProfileOwner />
+                            </div>
+                        </div>
+                    )
 
-                {/* Fomrulario perfil */}
-                <div className='w-full md:w-1/2'>
-                    <FormProfile/>
-                </div>
+                    // Administrador (usuario) → muestra formulario + card + cambiar contraseña
+                    : (
+                        <div className='flex justify-around gap-x-8 flex-wrap gap-y-8 md:flex-nowrap'>
 
+                            {/* Formulario para editar perfil */}
+                            <div className='w-full md:w-1/2'>
+                                <FormProfile />
+                            </div>
 
-                {/* Card para mostrar el perfil y formulario para cambiar la contraseña */}
-                <div className='w-full md:w-1/2'>
-                    <CardProfile/>
-                    
-                    <CardPassword/>
-                </div>
+                            {/* Card con datos del perfil y cambio de contraseña */}
+                            <div className='w-full md:w-1/2'>
+                                <CardProfile />
+                                <CardPassword />
+                            </div>
 
-
-            </div>
+                        </div>
+                    )
+            }
         </>
-
     )
 }
 

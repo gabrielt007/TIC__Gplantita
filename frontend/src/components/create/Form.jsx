@@ -1,146 +1,160 @@
+/* eslint-disable react/prop-types */
 import { useState } from "react"
+import { useFetch } from "../../hooks/useFetch"
+import { useNavigate } from "react-router"
+import { useForm } from "react-hook-form"
+import { toast, ToastContainer } from "react-toastify"
+import generateAvatar from "../../helpers/consultarIA"
+
+const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/2138/2138440.png"
 
 
-export const Form = () => {
+export const Form = ({ patient }) => {
 
-    const [stateAvatar, setStateAvatar] = useState({
-        generatedImage: "https://cdn-icons-png.flaticon.com/512/2913/2913133.png",
+    const [avatar, setAvatar] = useState({
+        image: DEFAULT_AVATAR,
         prompt: "",
         loading: false
     })
 
-    const [selectedOption, setSelectedOption] = useState("ia")
+    const navigate = useNavigate()
+    const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm()
+    const { fetchDataBackend } = useFetch()
+
+    const selectedOption = watch("imageOption")
+
+
+    // Genera imagen con IA y la inyecta en el formulario
+    const handleGenerateImage = async () => {
+
+        setAvatar(prev => ({ ...prev, loading: true }))
+
+        try {
+            const blob = await generateAvatar(avatar.prompt)
+
+            const isImage = blob?.type?.startsWith("image/")
+            if (!isImage) throw new Error("No es una imagen válida")
+
+            const file = new File([blob], "avatar.png", { type: blob.type })
+            const imageUrl = URL.createObjectURL(blob)
+
+            setAvatar(prev => ({ ...prev, image: imageUrl, loading: false }))
+            setValue("imagen", [file])
+
+        } catch (error) {
+            console.error(error)
+            toast.error("Error al generar la imagen")
+            setAvatar(prev => ({ ...prev, image: DEFAULT_AVATAR, loading: false }))
+        }
+    }
+
+
+    // Envía el formulario al backend
+    const registerCultivo = async (dataForm) => {
+
+        const formData = new FormData()
+
+        Object.keys(dataForm).forEach((key) => {
+            if (key === "imagen") {
+                if (dataForm.imagen?.[0]) {
+                    formData.append("imagen", dataForm.imagen[0])
+                }
+            } else {
+                formData.append(key, dataForm[key])
+            }
+        })
+
+        const storedUser = JSON.parse(localStorage.getItem("auth-token"))
+        const headers = {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${storedUser.state.token}`
+        }
+
+        let url = `${import.meta.env.VITE_BACKEND_URL}/cultivo/registro`
+        let response
+
+        if (patient?._id) {
+            url = `${import.meta.env.VITE_BACKEND_URL}/cultivo/actualizar/${patient._id}`
+            response = await fetchDataBackend(url, formData, "PUT", headers)
+        } else {
+            response = await fetchDataBackend(url, formData, "POST", headers)
+        }
+
+        if (response) {
+            setTimeout(() => {
+                navigate("/dashboard/list")
+            }, 2000)
+        }
+    }
 
     return (
-        <form>
+        <form onSubmit={handleSubmit(registerCultivo)}>
 
-            {/* Información del responsable */}
-            <fieldset className="border-2 border-green-600 p-6 rounded-lg shadow-lg">
-                <legend className="text-xl font-bold text-gray-700 bg-green-100 px-4 py-1 rounded-md">
-                    Información del responsable
+            <ToastContainer />
+
+            {/* ─── Sección: Información del propietario ─── */}
+            <fieldset className="border-2 border-gray-500 p-6 rounded-lg shadow-lg">
+
+                <legend className="text-xl font-bold text-gray-700 bg-gray-200 px-4 py-1 rounded-md">
+                    Información del propietario
                 </legend>
 
-                {/* Cédula */}
-                <div>
-                    <label className="mb-2 block text-sm font-semibold">Cédula</label>
-                    <div className="flex items-center gap-10 mb-5">
-                        <input
-                            type="number"
-                            inputMode="numeric"
-                            placeholder="Ingresa la cédula"
-                            className="block w-full rounded-md border border-gray-300 py-1 px-2 text-gray-500"
-                        />
-                        <button className="py-1 px-8 bg-green-700 text-slate-100 border rounded-xl hover:scale-110 duration-300 hover:bg-green-900 hover:text-white sm:w-80">
-                            Consultar
-                        </button>
-                    </div>
-                </div>
-
-                {/* Nombres completos */}
-                <div>
-                    <label className="mb-2 block text-sm font-semibold">Nombres completos</label>
+                {/* Nombre del propietario */}
+                <div className="mb-5">
+                    <label className="mb-2 block text-sm font-semibold">Nombre completo</label>
                     <input
                         type="text"
-                        placeholder="Ingresa nombre y apellido"
-                        className="block w-full rounded-md border border-gray-300 py-1 px-2 text-gray-500 mb-5"
+                        placeholder="Ingresa el nombre del propietario"
+                        className="block w-full rounded-md border border-gray-300 py-1 px-2 text-gray-500"
+                        {...register("nombrePropietario", { required: "El nombre del propietario es obligatorio" })}
                     />
+                    {errors.nombrePropietario && <p className="text-red-800 text-sm mt-1">{errors.nombrePropietario.message}</p>}
                 </div>
 
-                {/* Correo electrónico */}
-                <div>
+                {/* Correo del propietario */}
+                <div className="mb-5">
                     <label className="mb-2 block text-sm font-semibold">Correo electrónico</label>
                     <input
                         type="email"
-                        placeholder="Ingresa el correo electrónico"
-                        className="block w-full rounded-md border border-gray-300 py-1 px-2 text-gray-500 mb-5"
+                        placeholder="Ingresa el correo del propietario"
+                        className="block w-full rounded-md border border-gray-300 py-1 px-2 text-gray-500"
+                        {...register("emailPropietario", { required: "El correo del propietario es obligatorio" })}
                     />
+                    {errors.emailPropietario && <p className="text-red-800 text-sm mt-1">{errors.emailPropietario.message}</p>}
                 </div>
 
-                {/* Celular */}
-                <div>
-                    <label className="mb-2 block text-sm font-semibold">Celular</label>
-                    <input
-                        type="text"
-                        inputMode="tel"
-                        placeholder="Ingresa el celular"
-                        className="block w-full rounded-md border border-gray-300 py-1 px-2 text-gray-500 mb-5"
-                    />
-                </div>
             </fieldset>
 
-            {/* Información del cultivo */}
-            <fieldset className="border-2 border-green-600 p-6 rounded-lg shadow-lg mt-10">
-                <legend className="text-xl font-bold text-gray-700 bg-green-100 px-4 py-1 rounded-md">
+
+            {/* ─── Sección: Información del cultivo ─── */}
+            <fieldset className="border-2 border-gray-500 p-6 rounded-lg shadow-lg mt-10">
+
+                <legend className="text-xl font-bold text-gray-700 bg-gray-200 px-4 py-1 rounded-md">
                     Información del cultivo
                 </legend>
 
                 {/* Nombre del cultivo */}
-                <div>
+                <div className="mb-5">
                     <label className="mb-2 block text-sm font-semibold">Nombre del cultivo</label>
                     <input
                         type="text"
                         placeholder="Ej. Tomate cherry, Lechuga romana..."
-                        className="block w-full rounded-md border border-gray-300 py-1 px-2 text-gray-500 mb-5"
+                        className="block w-full rounded-md border border-gray-300 py-1 px-2 text-gray-500"
+                        {...register("nombreCultivo", { required: "El nombre del cultivo es obligatorio" })}
                     />
+                    {errors.nombreCultivo && <p className="text-red-800 text-sm mt-1">{errors.nombreCultivo.message}</p>}
                 </div>
 
-                {/* Imagen del cultivo */}
-                <label className="mb-2 block text-sm font-semibold">Imagen del cultivo</label>
-                <div className="flex gap-4 mb-2">
-                    <label className="flex items-center gap-2">
-                        <input type="radio" value="ia" checked={selectedOption === "ia"} onChange={() => setSelectedOption("ia")} />
-                        Generar con IA
-                    </label>
-                    <label className="flex items-center gap-2">
-                        <input type="radio" value="upload" checked={selectedOption === "upload"} onChange={() => setSelectedOption("upload")} />
-                        Subir Imagen
-                    </label>
-                </div>
 
-                {selectedOption === "ia" && (
-                    <div className="mt-5">
-                        <label className="mb-2 block text-sm font-semibold">Imagen con IA</label>
-                        <div className="flex items-center gap-10 mb-5">
-                            <input
-                                type="text"
-                                placeholder="Describe el cultivo para generar imagen..."
-                                className="block w-full rounded-md border border-gray-300 py-1 px-2 text-gray-500"
-                                value={stateAvatar.prompt}
-                                onChange={(e) => setStateAvatar(prev => ({ ...prev, prompt: e.target.value }))}
-                            />
-                            <button
-                                type="button"
-                                className="py-1 px-8 bg-green-700 text-slate-100 border rounded-xl hover:scale-110 duration-300 hover:bg-green-900 hover:text-white sm:w-80"
-                                disabled={stateAvatar.loading}
-                            >
-                                {stateAvatar.loading ? "Generando..." : "Generar con IA"}
-                            </button>
-                        </div>
-                        {stateAvatar.generatedImage && (
-                            <img src={stateAvatar.generatedImage} alt="Imagen cultivo IA" width={100} height={100} />
-                        )}
-                    </div>
-                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
 
-                {selectedOption === "upload" && (
-                    <div className="mt-5">
-                        <label className="mb-2 block text-sm font-semibold">Subir Imagen</label>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            className="block w-full rounded-md border border-gray-300 py-1 px-2 text-gray-500 mb-5"
-                        />
-                    </div>
-                )}
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* Tipo de cultivo */}
+                    {/* Tipo de planta */}
                     <div>
-                        <label htmlFor="tipo" className="mb-2 block text-sm font-semibold">Tipo de cultivo</label>
+                        <label className="mb-2 block text-sm font-semibold">Tipo de planta</label>
                         <select
-                            id="tipo"
                             className="block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-700"
                             defaultValue=""
+                            {...register("tipoPlanta", { required: "El tipo de planta es obligatorio" })}
                         >
                             <option value="">--- Seleccionar ---</option>
                             <option value="hortaliza">Hortaliza</option>
@@ -149,58 +163,197 @@ export const Form = () => {
                             <option value="flor">Flor</option>
                             <option value="otro">Otro</option>
                         </select>
+                        {errors.tipoPlanta && <p className="text-red-800 text-sm mt-1">{errors.tipoPlanta.message}</p>}
                     </div>
 
-                    {/* Fecha de siembra */}
+                    {/* Cantidad */}
                     <div>
-                        <label htmlFor="fechaSiembra" className="mb-2 block text-sm font-semibold">Fecha de siembra</label>
+                        <label className="mb-2 block text-sm font-semibold">Cantidad</label>
                         <input
-                            id="fechaSiembra"
-                            type="date"
-                            className="block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-700"
+                            type="number"
+                            inputMode="numeric"
+                            min="1"
+                            placeholder="Ej. 10"
+                            className="block w-full rounded-md border border-gray-300 py-1 px-2 text-gray-500"
+                            {...register("cantidad", { required: "La cantidad es obligatoria" })}
                         />
+                        {errors.cantidad && <p className="text-red-800 text-sm mt-1">{errors.cantidad.message}</p>}
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                    {/* Zona del invernadero */}
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+
+                    {/* Nivel de humedad */}
                     <div>
-                        <label htmlFor="zona" className="mb-2 block text-sm font-semibold">Zona del invernadero</label>
+                        <label className="mb-2 block text-sm font-semibold">Nivel de humedad</label>
+                        <select
+                            className="block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-700"
+                            defaultValue=""
+                            {...register("nivelhumedad", { required: "El nivel de humedad es obligatorio" })}
+                        >
+                            <option value="">--- Seleccionar ---</option>
+                            <option value="bajo">Bajo</option>
+                            <option value="medio">Medio</option>
+                            <option value="alto">Alto</option>
+                        </select>
+                        {errors.nivelhumedad && <p className="text-red-800 text-sm mt-1">{errors.nivelhumedad.message}</p>}
+                    </div>
+
+                    {/* Nivel de riego */}
+                    <div>
+                        <label className="mb-2 block text-sm font-semibold">Nivel de riego</label>
+                        <select
+                            className="block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-700"
+                            defaultValue=""
+                            {...register("nivelRiego", { required: "El nivel de riego es obligatorio" })}
+                        >
+                            <option value="">--- Seleccionar ---</option>
+                            <option value="bajo">Bajo</option>
+                            <option value="medio">Medio</option>
+                            <option value="alto">Alto</option>
+                        </select>
+                        {errors.nivelRiego && <p className="text-red-800 text-sm mt-1">{errors.nivelRiego.message}</p>}
+                    </div>
+
+                    {/* Nivel de luz */}
+                    <div>
+                        <label className="mb-2 block text-sm font-semibold">Nivel de luz</label>
+                        <select
+                            className="block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-700"
+                            defaultValue=""
+                            {...register("nivelLuz", { required: "El nivel de luz es obligatorio" })}
+                        >
+                            <option value="">--- Seleccionar ---</option>
+                            <option value="bajo">Bajo</option>
+                            <option value="medio">Medio</option>
+                            <option value="alto">Alto</option>
+                        </select>
+                        {errors.nivelLuz && <p className="text-red-800 text-sm mt-1">{errors.nivelLuz.message}</p>}
+                    </div>
+                </div>
+
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+
+                    {/* Tiempo de cosecha */}
+                    <div>
+                        <label className="mb-2 block text-sm font-semibold">Tiempo estimado de cosecha</label>
                         <input
-                            id="zona"
                             type="text"
-                            placeholder="Ej. Zona A, Sector 2..."
-                            className="block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-700"
+                            placeholder="Ej. 3 meses, 90 días..."
+                            className="block w-full rounded-md border border-gray-300 py-1 px-2 text-gray-500"
+                            {...register("tiempoCosecha", { required: "El tiempo de cosecha es obligatorio" })}
                         />
+                        {errors.tiempoCosecha && <p className="text-red-800 text-sm mt-1">{errors.tiempoCosecha.message}</p>}
                     </div>
 
-                    {/* Fecha estimada de cosecha */}
+                    {/* Estado de madurez */}
                     <div>
-                        <label htmlFor="fechaCosecha" className="mb-2 block text-sm font-semibold">Fecha estimada de cosecha</label>
-                        <input
-                            id="fechaCosecha"
-                            type="date"
+                        <label className="mb-2 block text-sm font-semibold">Estado de madurez</label>
+                        <select
                             className="block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-700"
-                        />
+                            defaultValue=""
+                            {...register("estadoMadurezCultivo", { required: "El estado de madurez es obligatorio" })}
+                        >
+                            <option value="">--- Seleccionar ---</option>
+                            <option value="semilla">Semilla</option>
+                            <option value="germinacion">Germinación</option>
+                            <option value="crecimiento">Crecimiento</option>
+                            <option value="maduracion">Maduración</option>
+                            <option value="cosecha">Listo para cosechar</option>
+                        </select>
+                        {errors.estadoMadurezCultivo && <p className="text-red-800 text-sm mt-1">{errors.estadoMadurezCultivo.message}</p>}
                     </div>
                 </div>
 
-                {/* Observaciones */}
-                <div className="mt-4">
-                    <label className="mb-2 block text-sm font-semibold">Observaciones</label>
+
+                {/* Detalle / observaciones del cultivo */}
+                <div className="mb-5">
+                    <label className="mb-2 block text-sm font-semibold">Detalle del cultivo</label>
                     <textarea
-                        placeholder="Ingresa condiciones especiales, síntomas, notas de cultivo..."
-                        className="block w-full rounded-md border border-gray-300 py-1 px-2 text-gray-500 mb-5"
+                        placeholder="Ingresa condiciones especiales, síntomas, notas del cultivo..."
+                        className="block w-full rounded-md border border-gray-300 py-1 px-2 text-gray-500"
+                        rows={3}
+                        {...register("detalleCultivo", { required: "El detalle del cultivo es obligatorio" })}
                     />
+                    {errors.detalleCultivo && <p className="text-red-800 text-sm mt-1">{errors.detalleCultivo.message}</p>}
                 </div>
+
+
+                {/* ─── Imagen del cultivo ─── */}
+                <label className="mb-2 block text-sm font-semibold">Imagen del cultivo</label>
+
+                <div className="flex gap-4 mb-2">
+                    <label className="flex items-center gap-2">
+                        <input
+                            type="radio"
+                            value="ia"
+                            {...register("imageOption", { required: "Seleccione una opción para la imagen" })}
+                        />
+                        Generar con IA
+                    </label>
+                    <label className="flex items-center gap-2">
+                        <input
+                            type="radio"
+                            value="upload"
+                            {...register("imageOption", { required: "Seleccione una opción para la imagen" })}
+                        />
+                        Subir imagen
+                    </label>
+                </div>
+                {errors.imageOption && <p className="text-red-800 text-sm mt-1">{errors.imageOption.message}</p>}
+
+
+                {/* Imagen con IA */}
+                {selectedOption === "ia" && (
+                    <div className="mt-5">
+                        <label className="mb-2 block text-sm font-semibold">Imagen con IA</label>
+                        <div className="flex items-center gap-4 mb-4">
+                            <input
+                                type="text"
+                                placeholder="Describe el cultivo para generar imagen..."
+                                className="block w-full rounded-md border border-gray-300 py-1 px-2 text-gray-500"
+                                value={avatar.prompt}
+                                onChange={(e) => setAvatar(prev => ({ ...prev, prompt: e.target.value }))}
+                            />
+                            <button
+                                type="button"
+                                className="py-1 px-8 bg-gray-600 text-slate-300 border rounded-xl hover:scale-110 duration-300 hover:bg-gray-900 hover:text-white sm:w-80"
+                                onClick={handleGenerateImage}
+                                disabled={avatar.loading}
+                            >
+                                {avatar.loading ? "Generando..." : "Generar con IA"}
+                            </button>
+                        </div>
+                        {avatar.image && (
+                            <img src={avatar.image} alt="Avatar cultivo IA" width={100} height={100} className="rounded-md" />
+                        )}
+                    </div>
+                )}
+
+                {/* Subir imagen manual */}
+                {selectedOption === "upload" && (
+                    <div className="mt-5">
+                        <label className="mb-2 block text-sm font-semibold">Subir imagen</label>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            className="block w-full rounded-md border border-gray-300 py-1 px-2 text-gray-500 mb-5"
+                            {...register("imagen")}
+                        />
+                    </div>
+                )}
 
             </fieldset>
+
 
             {/* Botón de registro */}
             <input
                 type="submit"
-                className="bg-green-800 w-full p-2 mt-5 text-slate-100 uppercase font-bold rounded-lg hover:bg-green-700 cursor-pointer transition-all"
-                value="Registrar cultivo"
+                className="bg-gray-800 w-full p-2 mt-5 text-slate-300 uppercase font-bold rounded-lg 
+                hover:bg-gray-600 cursor-pointer transition-all"
+                value={patient?._id ? "Actualizar cultivo" : "Registrar cultivo"}
             />
 
         </form>

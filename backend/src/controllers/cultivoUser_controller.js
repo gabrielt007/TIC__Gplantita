@@ -55,7 +55,7 @@ try{
 
 const listarCultivos = async (req, res)=>{
     try {
-        const cultivos = await cultivoUser.find({estadoCultivo:false,usuario:req.userAppHeader._id}).select("-passwordPropietario -__v -createdAt -updatedAt").populate("usuario", "nombre")
+        const cultivos = await cultivoUser.find({estadoCultivo:true,usuario:req.userAppHeader._id}).select("-passwordPropietario -__v -createdAt -updatedAt").populate("usuario", "nombre")
 
         res.status(200).json(cultivos)
     } catch (error) {
@@ -67,18 +67,29 @@ const listarCultivos = async (req, res)=>{
 
 const detalleCultivo = async (req, res) =>{
     try {
-        const {id} = req.params
+        // Paso 1 — Obtener el id del cultivo desde la URL
+        const { id } = req.params
 
-        if(!mongoose.Types.ObjectId.isValid(id)){
-            return res.status(404).json({msg: "Lo sentimos, el cultivo no existe"})
+        // Paso 2 — Validar que el id sea un ObjectId válido de MongoDB
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(404).json({ msg: "Lo sentimos, el cultivo no existe" })
         }
 
-        const cultivoDBB = await cultivoUser.findById(id).select("-passwordPropietario -__v -createdAt -updatedAt").populate("usuario", "nombre")
-        
-        res.status(200).json(cultivoDBB)
+        const cultivoBDD = await cultivoUser.findById(id).select(
+            "nombrePropietario emailPropietario nombreCultivo tipoPlanta cantidad nivelhumedad nivelRiego nivelLuz tiempoCosecha estadoMadurezCultivo fechaIngresoCultivo estadoCultivo detalleCultivo avatarCultivo"
+        )
+
+        // Paso 2 — Verificar que el cultivo exista en la BDD
+        if (!cultivoBDD) {
+            return res.status(404).json({ msg: "Lo sentimos, el cultivo no existe" })
+        }
+
+        // Paso 4 — Responder con los datos del cultivo
+        res.status(200).json(cultivoBDD)
 
     } catch (error) {
-        res.status(500).json({msg: "Error al obtener el cultivo"})
+        console.error(error)
+        res.status(500).json({ msg: "Error al obtener el cultivo" })
     }
 }
 

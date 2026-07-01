@@ -80,7 +80,7 @@ const FormularioPerfil = () => {
             <div>
                 <label className="mb-2 block text-sm font-semibold">Correo electrónico</label>
                 <input type="email" placeholder="Ingresa tu correo" className="block w-full 
-                rounded-md border border-gray-300 py-1 px-2 text-gray-500 mb-5" disabled
+                rounded-md border border-gray-300 py-1 px-2 text-gray-500 mb-5 cursor-not-allowed " disabled
                 />
             </div>
 

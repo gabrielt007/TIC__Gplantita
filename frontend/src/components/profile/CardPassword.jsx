@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form"
 import storeProfile from "../../context/storeProfile"
 import storeAuth from "../../context/storeAuth"
-import { ToastContainer} from 'react-toastify';
+import { ToastContainer } from 'react-toastify'
 
 const CardPassword = () => {
 
@@ -27,8 +27,6 @@ const CardPassword = () => {
             <form onSubmit={handleSubmit(updatePassword)}>
 
                 <ToastContainer/>
-
-          
 
                 {/* Campo contraseña actual */}
                 <div>
