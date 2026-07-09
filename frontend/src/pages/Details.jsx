@@ -2,28 +2,39 @@ import { useEffect, useState } from "react"
 import { useParams } from "react-router"
 import { useFetch } from "../hooks/useFetch"
 import { ToastContainer } from "react-toastify"
+import storeTreatments from "../context/store/storeTreatments"
 
 
 const Details = () => {
 
     const { id } = useParams()
     const { fetchDataBackend } = useFetch()
+    const [treatments, setTreatments] = useState([])
     const [cultivo, setCultivo] = useState(null)
+    const { modal, toggleModal } = storeTreatments()
 
-    const getCultivo = async () => {
-        const url = `${import.meta.env.VITE_BACKEND_URL}/cultivo/detalle/${id}`
-        const storedUser = JSON.parse(localStorage.getItem("auth-token"))
-        const headers = {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${storedUser.state.token}`,
-        }
-        const response = await fetchDataBackend(url, null, "GET", headers)
-        setCultivo(response)
-    }
+    
+
 
     useEffect(() => {
-        getCultivo()
-    }, [id])
+        
+        const getCultivo = async () => {
+            const url = `${import.meta.env.VITE_BACKEND_URL}/cultivo/detalle/${id}`
+            const storedUser = JSON.parse(localStorage.getItem("auth-token"))
+            const headers = {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${storedUser.state.token}`,
+            }
+            const response = await fetchDataBackend(url, null, "GET", headers)
+            setCultivo(response)
+            setTreatments(response.tratamientos)
+        }
+        
+        if(modal===false){
+            getCultivo()
+        }
+
+    }, [modal])
 
 
     if (!cultivo) {
@@ -123,6 +134,38 @@ const Details = () => {
 
                     </ul>
                 </div>
+
+                {/* Sección de tratamientos */}
+                <div className='flex justify-between items-center'>
+
+
+                    {/* Apertura del modal tratamientos */}
+                    <p>Este módulo te permite gestionar tratamientos</p>
+                    {
+                        cultivo.rol==="usuario" &&
+                        (
+                            <button className="px-5 py-2 bg-green-800 text-white rounded-lg
+                            hover:bg-green-700" onClick={()=>{toggleModal("treatments")}} >
+                                Registrar
+                            </button>
+                        )
+                    }
+
+                    {modal === "treatments" && (<ModalTreatments cultivoUserID={cultivoUser._id}/>)}
+
+                </div>
+                
+
+                {/* Mostrar los tratamientos */}
+                {
+                    treatments.length == 0
+                        ?
+                        <div className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+                            <span className="font-medium">No existen registros</span>
+                        </div>
+                        :
+                        <TableTreatments treatments={treatments} />
+                }
 
                 {/* Imagen del cultivo */}
                 <div className="flex flex-col items-center gap-4">

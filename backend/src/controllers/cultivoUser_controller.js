@@ -3,7 +3,7 @@ import {subirImagenCloudinary, subirBase64Cloudinary} from '../helpers/uploadClo
 import cultivoUser from '../models/cultivoUser.js'
 import mongoose from 'mongoose';
 import { crearTokenJWT } from '../middleware/JWT.js';
-
+import Tratamiento from "../models/tratamientoCultivo.js"
 
 const registrarCultivo = async(req, res) => {
 try{
@@ -76,8 +76,11 @@ const detalleCultivo = async (req, res) =>{
         }
 
         const cultivoBDD = await cultivoUser.findById(id).select(
-            "nombrePropietario emailPropietario nombreCultivo tipoPlanta cantidad nivelhumedad nivelRiego nivelLuz tiempoCosecha estadoMadurezCultivo fechaIngresoCultivo estadoCultivo detalleCultivo avatarCultivo"
+            "nombrePropietario emailPropietario nombreCultivo tipoPlanta cantidad tiempoCosecha estadoMadurezCultivo fechaIngresoCultivo estadoCultivo detalleCultivo avatarCultivo usuario tratamientos"
         )
+        const tratamientos = await Tratamiento.find().where('cultivoUser').equals(id)
+    
+        cultivoBDD.tratamientos = [...tratamientos]
 
         // Paso 2 — Verificar que el cultivo exista en la BDD
         if (!cultivoBDD) {

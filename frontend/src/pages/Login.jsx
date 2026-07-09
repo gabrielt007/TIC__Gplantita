@@ -15,7 +15,7 @@ const Login = () => {
     const { setToken, setRol } = storeAuth()
 
     const loginUser = async(dataForm) => {
-        const url = dataForm.password.includes("user")
+        const url = dataForm.password.includes("vet")
             ? `${import.meta.env.VITE_BACKEND_URL}/user/login`
             : `${import.meta.env.VITE_BACKEND_URL}/cultivo/login`
         const response = await fetchDataBackend(url, dataForm,'POST')

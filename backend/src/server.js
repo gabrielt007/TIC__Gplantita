@@ -5,6 +5,9 @@ import routerUserApp from './routers/userApp_routes.js';
 import routerCultivoUser from './routers/cultivoUser_routes.js';
 import cloudinary from "cloudinary";
 import fileUpload from "express-fileupload";
+import routerTratamientos from './routers/tratamiento_routes.js'
+
+
 
 const app = express();
 dotenv.config();
@@ -28,5 +31,8 @@ app.get("/", (req, res) => res.send("Hola server"))
 
 app.use('/api', routerUserApp)
 app.use('/api', routerCultivoUser)
+
+// Rutas para tratamientos
+app.use('/api',routerTratamientos)
 
 export default app;

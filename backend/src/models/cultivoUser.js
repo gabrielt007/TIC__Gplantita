@@ -28,21 +28,6 @@ const cultivoSchema = new Schema({
         default: 1,
         required: false
     },
-    nivelhumedad: {
-        type: String,
-        required: false,
-        trim: true
-    },
-    nivelRiego: {
-        type: String,
-        required: false,
-        trim: true
-    },
-    nivelLuz: {
-        type: String,
-        required: false,
-        trim: true
-    },
     avatarCultivo: {
         type: String,
         trim: true
@@ -85,6 +70,13 @@ const cultivoSchema = new Schema({
         ref: "userApp",
         required: true
     },
+    tratamientos:[
+        {
+            type:mongoose.Schema.Types.ObjectId,
+            ref:'Tratamiento'
+        }
+    ],
+
     emailPropietario: {
         type: String,
         required: false,
