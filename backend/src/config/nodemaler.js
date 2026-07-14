@@ -14,17 +14,17 @@ const transporter = nodemailer.createTransport({
 })
 
 const sendMail = async (to, subject, html) => {
-    try{
+    try {
         const info = await transporter.sendMail({
-            from: `"WEBBACK" <lubswer@gmail.com>`,
+            from: `"WEBBACK" <${process.env.USER_GMAIL}>`,
             to,
             subject,
             html,
         })
         console.log("Email enviado: ", info.messageId)
-    }catch(error){
+    } catch (error) {
         console.log("Error enviado email:", error.messege)
-  
+
     }
 }
 
