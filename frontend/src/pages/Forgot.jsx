@@ -1,7 +1,7 @@
 import { Link } from 'react-router'
 import { useForm } from 'react-hook-form';
 import { ToastContainer} from 'react-toastify'
-import { useFetch } from '../hooks/useFetch'
+import {useFetch} from '../hooks/useFetch'
 
 export const Forgot = () => {
 
