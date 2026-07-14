@@ -35,14 +35,14 @@ export const Home = () => {
                     <Link to="/login" className='block bg-green-800 w-40 py-2 mx-auto text-white rounded-2xl text-center sm:mx-0 hover:bg-green-700'>Comenzar</Link>
                     <p className='font-bold text-left my-4 md:text-2xl'>Encuéntranos</p>
                     <div className="flex justify-center gap-4">
-                        <div className="flex items-center gap-2 bg-green-100 px-4 py-2 rounded-lg border border-green-300">
+                        {/*<div className="flex items-center gap-2 bg-green-100 px-4 py-2 rounded-lg border border-green-300">
                             <span className="text-2xl">🌱</span>
                             <span className="font-semibold text-green-800 text-sm">App Store</span>
                         </div>
                         <div className="flex items-center gap-2 bg-green-100 px-4 py-2 rounded-lg border border-green-300">
                             <span className="text-2xl">🌿</span>
                             <span className="font-semibold text-green-800 text-sm">Google Play</span>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
                 <div className='hidden md:flex items-center justify-center text-[10rem] select-none'>
