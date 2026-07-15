@@ -110,16 +110,54 @@ export const Home = () => {
                 <div className='flex justify-between items-center'>
                     <div className='text-3xl font-extrabold text-green-800'>Contáctanos</div>
                     <ul className='flex gap-4'>
-                        <li><FaFacebook className='text-2xl' /></li>
-                        <li><FaSquareInstagram className='text-2xl' /></li>
-                        <li><FaXTwitter className='text-2xl' /></li>
+                        <li>
+                            <a
+                                href="https://www.facebook.com"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:text-green-700 transition-colors"
+                            >
+                                <FaFacebook className='text-2xl' />
+                            </a>
+                        </li>
+                        <li>
+                            <a
+                                href="https://www.instagram.com"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:text-green-700 transition-colors"
+                            >
+                                <FaSquareInstagram className='text-2xl' />
+                            </a>
+                        </li>
+                        <li>
+                            <a
+                                href="https://x.com"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:text-green-700 transition-colors"
+                            >
+                                <FaXTwitter className='text-2xl' />
+                            </a>
+                        </li>
                     </ul>
                 </div>
                 <div className='flex justify-between items-center'>
                     <div className='text-left'>
                         <p className='font-bold my-2'>Email: admin@greenhouse.com</p>
                         <p className='font-bold'>Teléfono: 0995644186</p>
+                        <p className='font-bold'>Dirección:</p>
+                        <iframe
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15959.15009985838!2d-78.51237729261271!3d-0.2251148387309881!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91d59a107e1cd44b%3A0x88a284f66939ed4!2sESCUELA%20POLIT%C3%89CNICA%20NACIONAL!5e0!3m2!1ses!2sec!4v1784076726068!5m2!1ses!2sec"
+                            width="230"
+                            height="200"
+                            style={{ border: 0 }}
+                            allowFullScreen=""
+                            loading="lazy"
+                            referrerPolicy="strict-origin-when-cross-origin"
+                        />
                     </div>
+
                     <div className='flex-1 sm:max-w-1/2'>
                         <form action="#" className='w-full p-4'>
                             <fieldset className='border-2 border-green-900 p-4 rounded-sm'>
