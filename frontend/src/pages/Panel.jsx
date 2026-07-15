@@ -1,6 +1,22 @@
+import { useClima } from "../hooks/useClima"
+import storeProfile from "../context/storeProfile"
+
 export default function Panel() {
 
   const inputCls = "w-full rounded-md border border-gray-300 px-3 py-2 text-gray-700 placeholder-gray-400";
+
+  // ── Obtener el perfil del usuario desde el store de Zustand ────
+  const { user } = storeProfile()
+
+  // ── Coordenadas dinámicas desde el perfil del usuario ──────────
+  // user.latitud y user.longitud provienen del modelo userApp del backend.
+  // Mientras el perfil se carga, serán undefined → el hook esperará sin error.
+  const latitud  = user?.latitud  ?? null
+  const longitud = user?.longitud ?? null
+  const API_KEY  = import.meta.env.VITE_OPENWEATHER_API_KEY
+
+  // ── Obtener datos del clima en tiempo real ─────────────────────
+  const { clima, cargando, error } = useClima(latitud, longitud, API_KEY)
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -21,9 +37,23 @@ export default function Panel() {
           <p className="text-3xl font-semibold text-gray-800">8</p>
         </div>
 
+        {/* Tarjeta de temperatura — ahora con datos en tiempo real */}
         <div className="bg-white rounded-lg shadow p-4 border-l-4 border-yellow-400">
-          <p className="text-sm text-gray-500">🌡️ Temp. promedio (°C)</p>
-          <p className="text-3xl font-semibold text-gray-800">22°</p>
+          <p className="text-sm text-gray-500">🌡️ Temp. actual (°C)</p>
+          {cargando ? (
+            <p className="text-xl text-gray-400 animate-pulse">Cargando...</p>
+          ) : error ? (
+            <p className="text-sm text-red-500" title={error}>⚠️ Error al obtener clima</p>
+          ) : (
+            <>
+              <p className="text-3xl font-semibold text-gray-800">
+                {clima?.temperatura?.toFixed(1)}°
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                {clima?.descripcion} — {clima?.zona}
+              </p>
+            </>
+          )}
         </div>
 
         <div className="bg-white rounded-lg shadow p-4 border-l-4 border-purple-400">
