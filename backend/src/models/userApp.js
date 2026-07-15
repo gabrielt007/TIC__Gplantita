@@ -47,6 +47,14 @@ const userAppSchema = new Schema({
     rol: {
         type: String,
         default: "usuario"
+    },
+    latitud: {
+        type: Number,
+        default: null
+    },
+    longitud: {
+        type: Number,
+        default: null
     }
 }, {
     timestamps: true

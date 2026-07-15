@@ -2,20 +2,67 @@ import { useState } from "react"
 import { MdVisibility, MdVisibilityOff } from "react-icons/md"
 import { Link } from "react-router"
 import { useForm } from "react-hook-form"
-import { ToastContainer } from "react-toastify"
+import { ToastContainer, toast } from "react-toastify"
 import { useFetch } from "../hooks/useFetch"
 
 export const Register = () => {
 
     const [showPassword, setShowPassword] = useState(false)
-
+    const [nombreLugar, setNombreLugar] = useState("")
+    const [suggestions, setSuggestions] = useState([])
     const { fetchDataBackend, loading } = useFetch()
 
     const {
         register,
         handleSubmit,
+        setValue,
+        watch,
         formState: { errors }
     } = useForm()
+
+    const latitud = watch("latitud")
+    const longitud = watch("longitud")
+
+    const handleLocationSearch = async (e) => {
+        const value = e.target.value
+        setNombreLugar(value)
+        if (value.length > 3) {
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=ec&q=${encodeURIComponent(value)}`)
+                const data = await res.json()
+                setSuggestions(data)
+            } catch (error) {
+                console.error(error)
+            }
+        } else {
+            setSuggestions([])
+        }
+    }
+
+    const selectSuggestion = (name) => {
+        setNombreLugar(name)
+        setSuggestions([])
+    }
+
+    const fetchCoordinates = async () => {
+        if (!nombreLugar) return
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=ec&q=${encodeURIComponent(nombreLugar)}`)
+            const data = await res.json()
+            if (data && data.length > 0) {
+                setValue("latitud", data[0].lat)
+                setValue("longitud", data[0].lon)
+                toast.success("Ubicación encontrada y añadida correctamente")
+            } else {
+                toast.error("No se encontró la ubicación especificada")
+            }
+        } catch (error) {
+            console.error(error)
+            toast.error("Error al buscar la ubicación")
+        }
+    }
+
+
 
     const registerUser = async (dataForm) => {
 
@@ -134,6 +181,49 @@ export const Register = () => {
                             {errors.direccion && (
                                 <p className="text-red-800 text-sm mt-1">
                                     {errors.direccion.message}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* BUSCADOR DE UBICACIÓN */}
+                        <div className="mb-3 relative">
+                            <label className="mb-2 block text-sm font-semibold">
+                                Buscar Ubicación
+                            </label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={nombreLugar}
+                                    onChange={handleLocationSearch}
+                                    placeholder="Ej: Quito, Pichincha"
+                                    className="block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-500"
+                                />
+                                <button 
+                                    type="button" 
+                                    onClick={fetchCoordinates}
+                                    className="bg-green-700 text-white px-4 py-2 rounded-md hover:bg-green-800 text-sm whitespace-nowrap"
+                                >
+                                    Añadir
+                                </button>
+                            </div>
+                            {suggestions.length > 0 && (
+                                <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-40 overflow-y-auto shadow-lg">
+                                    {suggestions.map((s, idx) => (
+                                        <li 
+                                            key={idx} 
+                                            onClick={() => selectSuggestion(s.display_name)}
+                                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-600 border-b last:border-0"
+                                        >
+                                            {s.display_name}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                            <input type="hidden" {...register("latitud")} />
+                            <input type="hidden" {...register("longitud")} />
+                            {latitud && longitud && (
+                                <p className="text-green-700 text-xs mt-1">
+                                    Coordenadas guardadas: {latitud}, {longitud}
                                 </p>
                             )}
                         </div>
