@@ -2,16 +2,6 @@ import mongoose, {Schema,model} from 'mongoose'
 
 const tratamientoSchema = new Schema({
 
-    nombre:{
-        type:String,
-        required:true,
-        trim:true
-    },
-    detalle:{
-        type:String,
-        required:true,
-        trim:true
-    },
     nivelhumedad: {
         type: String,
         required: false,

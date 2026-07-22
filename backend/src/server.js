@@ -6,6 +6,7 @@ import routerCultivoUser from './routers/cultivoUser_routes.js';
 import cloudinary from "cloudinary";
 import fileUpload from "express-fileupload";
 import routerTratamientos from './routers/tratamiento_routes.js'
+import routerAdmin from './routers/admin_routes.js'
 
 
 
@@ -34,5 +35,8 @@ app.use('/api', routerCultivoUser)
 
 // Rutas para tratamientos
 app.use('/api',routerTratamientos)
+
+// Rutas para Administrador
+app.use('/api', routerAdmin)
 
 export default app;

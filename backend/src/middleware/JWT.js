@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken"
 import userApp from "../models/userApp.js"
 import cultivoUser from "../models/cultivoUser.js"
-
+import Admin from "../models/admin.js"
 
 /**
  * Crear token JWT
@@ -31,6 +31,12 @@ const verificarTokenJWT = async (req, res, next) => {
             req.userAppHeader = userAppBDD
             next()
         } 
+        else if (rol === "admin") {
+            const adminBDD = await Admin.findById(id).lean().select("-password")
+            if (!adminBDD) return res.status(401).json({ msg: "Administrador no encontrado" })
+            req.adminHeader = adminBDD
+            next()
+        }
         else if(rol === "cultivo"){
             const cultivoBDD = await cultivoUser.findById(id).lean().select("-passwordPropietario")
             if (!cultivoBDD) return res.status(401).json({ msg: "Cultivador no encontrado" })          

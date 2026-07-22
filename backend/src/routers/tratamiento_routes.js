@@ -6,6 +6,6 @@ const router = Router()
 
 router.post('/tratamiento/registro',verificarTokenJWT,registrarTratamiento)
 
-router.delete('/tratamiento/eliminar/:id',verificarTokenJWT,eliminarTratamiento)
+router.delete('/tratamiento/eliminar',verificarTokenJWT,eliminarTratamiento)
 
 export default router
