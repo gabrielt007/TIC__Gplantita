@@ -17,15 +17,15 @@ const transporter = nodemailer.createTransport({
 const sendMail = async (to, subject, html) => {
     try {
         const info = await transporter.sendMail({
-            from: `"WEBBACK" <${process.env.USER_GMAIL}>`,
+            from: `"greenHOUSE" <${process.env.USER_GMAIL}>`,
             to,
             subject,
             html,
         })
         console.log("Email enviado: ", info.messageId)
     } catch (error) {
-        console.log("Error enviado email:", error.messege)
-
+        console.log("Error enviando email:", error.message)
+        console.log("Error completo:", error)
     }
 }
 
