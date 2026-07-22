@@ -14,14 +14,13 @@ const cultivoSchema = new Schema({
     },
     nombreCultivo: {
         type: String,
-        required: false,
+        required: true,
         trim: true,
     },
     tipoPlanta: {
         type: String,
-        required: false,
+        required: true,
         trim: true
-
     },
     cantidad: {
         type: String,
@@ -43,11 +42,17 @@ const cultivoSchema = new Schema({
     detalleCultivo: {
         type: String,
         trim: true,
+        default: "",
         required: false
     },
     fechaIngresoCultivo: {
         type: Date,
         default: Date.now,
+        required: false
+    },
+    fechaSalidaCultivo: {
+        type: Date,
+        default: null,
         required: false
     },
     estadoCultivo: {
@@ -58,11 +63,13 @@ const cultivoSchema = new Schema({
     tiempoCosecha: {
         type: String,
         required: false,
+        default: "",
         trim: true
     },  
     estadoMadurezCultivo: {
         type: String,
         required: false,
+        default: "",
         trim: true
     },
     usuario: {
@@ -76,16 +83,6 @@ const cultivoSchema = new Schema({
             ref:'Tratamiento'
         }
     ],
-
-    emailPropietario: {
-        type: String,
-        required: false,
-        trim: true
-    },
-    rol: {
-        type: String,
-        default: "cultivo"
-    },
     token: {
         type: String,
         default: null

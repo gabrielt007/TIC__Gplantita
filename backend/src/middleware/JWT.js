@@ -32,13 +32,13 @@ const verificarTokenJWT = async (req, res, next) => {
             next()
         } 
         else if(rol === "cultivo"){
-            const cultivoBDD = await cultivoUser.findById(id).lean().select("-password")
+            const cultivoBDD = await cultivoUser.findById(id).lean().select("-passwordPropietario")
             if (!cultivoBDD) return res.status(401).json({ msg: "Cultivador no encontrado" })          
             req.cultivoHeader = cultivoBDD
             next()
         }
         else{
-            const cultivoBDD = await cultivoUser.findById(id).lean().select("-password")
+            const cultivoBDD = await cultivoUser.findById(id).lean().select("-passwordPropietario")
             if (!cultivoBDD) return res.status(401).json({ msg: "Cultivador no encontrado" })          
             req.cultivoHeader = cultivoBDD
             next()

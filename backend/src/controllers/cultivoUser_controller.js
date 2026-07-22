@@ -1,71 +1,78 @@
 import { sendMailToOwner } from '../helpers/sendMail.js'
-import {subirImagenCloudinary, subirBase64Cloudinary} from '../helpers/uploadCloudinary.js';
+import { subirImagenCloudinary, subirBase64Cloudinary } from '../helpers/uploadCloudinary.js';
 import cultivoUser from '../models/cultivoUser.js'
 import mongoose from 'mongoose';
 import { crearTokenJWT } from '../middleware/JWT.js';
 import Tratamiento from "../models/tratamientoCultivo.js"
+import userApp from '../models/userApp.js';
 
-const registrarCultivo = async(req, res) => {
-try{
-    //paso1
-    const {emailPropietario}=req.body
-    if(Object.values(req.body).includes("")){
-        return res.status(400).json({msg: "Lo sentimos, debes llenar todos los campos del formulario"})
-    }
-
-    //paso2
-    const emailExiste = await cultivoUser.findOne({emailPropietario})
-
-    if(emailExiste) return res.status(400).json({msg: "Lo sentimos, el email ya existe"})
-
-
-    const password = Math.random().toString(36).toUpperCase().slice(2, 5)
-
-    const nuevoCultivo = new cultivoUser({
-            ...req.body,
-            passwordPropietario: await cultivoUser.prototype.encryptPassword("GH"+password),
-            usuario: req.userAppHeader._id
-    })
-    
-    if(req.files?.imagen){
-        const {secure_url, public_id} = await subirImagenCloudinary(req.files.imagen.tempFilePath)
-        nuevoCultivo.avatarCultivo = secure_url
-        nuevoCultivo.avatarCultivoID = public_id
-    }
-    if(req.body?.avatarCultivo){
-        const {secure_url} = await subirBase64Cloudinary(req.body.avatarCultivo)
-        nuevoCultivo.avatarCultivo = secure_url
-    }
-
-    await sendMailToOwner(emailPropietario, "GH"+password)
-
-
-
-    res.send("Cultivo registrado exitosamente")
-    await nuevoCultivo.save();
-
-
-
-}catch(error){
-    console.log(error)
-    res.status(500).json({msg: "Error al registrar el cultivo"})
-}
-
-}
-
-const listarCultivos = async (req, res)=>{
+const registrarCultivo = async (req, res) => {
     try {
-        const cultivos = await cultivoUser.find({estadoCultivo:true,usuario:req.userAppHeader._id}).select("-passwordPropietario -__v -createdAt -updatedAt").populate("usuario", "nombre")
+        //paso1
+        const { nombreCultivo } = req.body
+        if (Object.values(req.body).includes("")) {
+            return res.status(400).json({ msg: "Lo sentimos, debes llenar todos los campos del formulario" })
+        }
+
+        //paso2
+        const cultivoExiste = await cultivoUser.findOne({ nombreCultivo })
+
+        if (cultivoExiste) return res.status(400).json({ msg: "Lo sentimos, el nombre del cultivo ya existe" })
+
+
+        const password = Math.random().toString(36).toUpperCase().slice(2, 5)
+
+        const nuevoCultivo = new cultivoUser({
+            ...req.body,
+            usuario: req.userAppHeader._id
+        })
+        nuevoCultivo.passwordPropietario = await nuevoCultivo.encryptPassword(password)
+
+        if (req.files?.imagen) {
+            const { secure_url, public_id } = await subirImagenCloudinary(req.files.imagen.tempFilePath)
+            nuevoCultivo.avatarCultivo = secure_url
+            nuevoCultivo.avatarCultivoID = public_id
+        }
+        if (req.body?.avatarCultivo) {
+            const { secure_url } = await subirBase64Cloudinary(req.body.avatarCultivo)
+            nuevoCultivo.avatarCultivo = secure_url
+        }
+
+        const user = await userApp.findById(req.userAppHeader._id)
+        if (!user) {
+            return res.status(404).json({ msg: "Usuario no encontrado" })
+        }
+
+        const emailUsuario = user.email
+        const nombreUsuario = user.nombre
+
+        await sendMailToOwner(emailUsuario, password, nombreUsuario)
+
+        await nuevoCultivo.save();
+        res.status(200).json({ msg: "Cultivo registrado exitosamente, revisa tu correo para obtener tu clave de acceso al cultivo" })
+
+
+
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ msg: "Error al registrar el cultivo" })
+    }
+
+}
+
+const listarCultivos = async (req, res) => {
+    try {
+        const cultivos = await cultivoUser.find({ estadoCultivo: true, usuario: req.userAppHeader._id }).select("-passwordPropietario -__v -createdAt -updatedAt").populate("usuario", "nombre")
 
         res.status(200).json(cultivos)
     } catch (error) {
         console.log(error)
-        return res.status(500).json({msg: "Error al listar los cultivos"})
+        return res.status(500).json({ msg: "Error al listar los cultivos" })
     }
 }
 
 
-const detalleCultivo = async (req, res) =>{
+const detalleCultivo = async (req, res) => {
     try {
         // Paso 1 — Obtener el id del cultivo desde la URL
         const { id } = req.params
@@ -76,16 +83,15 @@ const detalleCultivo = async (req, res) =>{
         }
 
         const cultivoBDD = await cultivoUser.findById(id).select(
-            "nombrePropietario emailPropietario nombreCultivo tipoPlanta cantidad tiempoCosecha estadoMadurezCultivo fechaIngresoCultivo estadoCultivo detalleCultivo avatarCultivo usuario tratamientos"
+            "nombrePropietario nombreCultivo tipoPlanta cantidad fechaSalidaCultivo estadoMadurezCultivo fechaIngresoCultivo estadoCultivo detalleCultivo avatarCultivo usuario tratamientos"
         )
-        const tratamientos = await Tratamiento.find().where('cultivoUser').equals(id)
-    
-        cultivoBDD.tratamientos = [...tratamientos]
-
         // Paso 2 — Verificar que el cultivo exista en la BDD
         if (!cultivoBDD) {
             return res.status(404).json({ msg: "Lo sentimos, el cultivo no existe" })
         }
+
+        const tratamientos = await Tratamiento.find().where('cultivoUser').equals(id)
+        cultivoBDD.tratamientos = [...tratamientos]
 
         // Paso 4 — Responder con los datos del cultivo
         res.status(200).json(cultivoBDD)
@@ -98,68 +104,61 @@ const detalleCultivo = async (req, res) =>{
 
 const eliminarCultivo = async (req, res) => {
     try {
-        const {id} = req.params
-        const {tiempoCosecha} = req.body
-        if(Object.values(req.body).includes("")){
-            return res.status(400).json({msg: "Lo sentimos, debes llenar todos los campos del formulario"})
+        const { id } = req.params
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(404).json({ msg: "Lo sentimos, el cultivo no existe" })
         }
-        if(!mongoose.Types.ObjectId.isValid(id)){
-            return res.status(404).json({msg: "Lo sentimos, el cultivo no existe"})
+        const cultivoEliminado = await cultivoUser.findByIdAndUpdate(id, { estadoCultivo: false, fechaSalidaCultivo: Date.now() })
+        if (!cultivoEliminado) {
+            return res.status(404).json({ msg: "Lo sentimos, el cultivo no existe" })
         }
-        await cultivoUser.findByIdAndUpdate(id, {estadoCultivo:false, tiempoCosecha: Date.parse(tiempoCosecha)})
-        res.status(200).json({msg: "Fecha de eliminado resgistrado correctamente"})
+
+        res.status(200).json({ msg: "Cultivo eliminado correctamente" })
     } catch (error) {
         console.error(error)
-        res.status(500).json({msg: "Error al eliminar el cultivo"})
+        res.status(500).json({ msg: "Error al eliminar el cultivo" })
     }
 }
 
 
-const login = async (req,res) => {
+const login = async (req, res) => {
     try {
-        const {email:emailPropietario,password:passwordPropietario} = req.body
-        if(Object.values(req.body).includes("")){
-            return res.status(400).json({msg: "Lo sentimos, debes llenar todos los campos del formulario"})
+        const { password: passwordPropietario, nombre: nombreCultivo } = req.body
+        if (Object.values(req.body).includes("") || !passwordPropietario || !nombreCultivo) {
+            return res.status(400).json({ msg: "Lo sentimos, debes llenar todos los campos del formulario" })
         }
-        const cultivoDB = await cultivoUser.findOne({emailPropietario})//////
-        if(!cultivoDB){
-            return res.status(400).json({msg: "Lo sentimos, el usuario no existe"})
+        const cultivoDB = await cultivoUser.findOne({ nombreCultivo }).select("-__v -createdAt -updatedAt")
+        if (!cultivoDB) {
+            return res.status(400).json({ msg: "Lo sentimos, el cultivo no existe" })
         }
+
         const passDB = await cultivoDB.matchPassword(passwordPropietario)
-        if(!passDB){
-            return res.status(400).json({msg: "Lo sentimos, la contraseña es incorrecta"})
+        if (!passDB) {
+            return res.status(400).json({ msg: "Lo sentimos, la contraseña es incorrecta" })
         }
         const token = crearTokenJWT(cultivoDB._id, cultivoDB.rol)
-        const {rol, _id} = cultivoDB
+        cultivoDB.estadoCultivo = true
+        await cultivoDB.save()
+        const { _id, estadoCultivo } = cultivoDB
         res.status(200).json({
             token,
-            rol,
+            estadoCultivo,
             _id
         })
+
     } catch (error) {
         console.error(error)
         res.status(500).json({ msg: `Error en el servidor - ${error.message}` })
     }
 }
 
-const perfil = (req, res) =>{
+const perfil = (req, res) => {
     try {
-       const {_id, emailPropietario, rol, nombrePropietario, nombreCultivo, tipoPlanta, cantidad, nivelhumedad, nivelRiego, nivelLuz} = req.cultivoHeader
-        res.status(200).json({
-            _id,
-            emailPropietario,
-            rol,
-            nombrePropietario,
-            nombreCultivo,
-            tipoPlanta,
-            cantidad,
-            nivelhumedad,
-            nivelRiego,
-            nivelLuz
-        }) 
+        const { passwordPropietario, token, __v, ...datosPerfil } = req.cultivoHeader
+        res.status(200).json(datosPerfil)
     } catch (error) {
         console.error(error)
-        res.status(500).json({msg: "Error al obtener el perfil"})
+        res.status(500).json({ msg: "Error al obtener el perfil" })
     }
 }
 

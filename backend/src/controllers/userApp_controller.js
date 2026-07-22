@@ -1,14 +1,34 @@
-import userApp  from "../models/userApp.js";
-import { sendMailToRecoveryPassword, sendMailToRegister} from "../helpers/sendMail.js";
+import userApp from "../models/userApp.js";
+import { sendMailToRecoveryPassword, sendMailToRegister } from "../helpers/sendMail.js";
 import { crearTokenJWT } from "../middleware/JWT.js"
 import mongoose from "mongoose"
 
 const registro = async (req, res) => {
     try{
-        const {email, password} = req.body;
-        if(Object.values(req.body).includes("")){
-            return res.status(400).json({msg: "Lo sentimos, debes llenar todos los campos del formulario"})
+        const {email, password, nombre, apellido, celular} = req.body;
+        if(Object.values(req.body).includes("") || !email || !password || !nombre || !apellido){
+            return res.status(400).json({msg: "Lo sentimos, debes llenar todos los campos requeridos"})
         }
+
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({msg: "El formato del correo electrónico no es válido"})
+        }
+
+        const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+        if (!nameRegex.test(nombre) || !nameRegex.test(apellido)) {
+            return res.status(400).json({msg: "El nombre y apellido solo pueden contener letras"})
+        }
+        if(celular.length !== 10){
+
+            return res.status(400).json({ msg : "El número de celular debe contener exáctamente 10 dígitos"})           
+        }
+        if (password.length < 8) {
+            return res.status(400).json({msg: "La contraseña debe tener al menos 8 caracteres"})
+        }
+
+
         const verificarEmailBDD = await userApp.findOne({ email });
 
         if(verificarEmailBDD){
@@ -95,7 +115,7 @@ const crearNuevoPassword = async (req,res)=>{
         const{password,confirmpassword} = req.body
         const { token } = req.params
         // Paso 2
-        if (Object.values(req.body).includes("")) return res.status(404).json({msg:"Debes llenar todos los campos"})
+        if (Object.values(req.body).includes("") || !password || !confirmpassword) return res.status(404).json({msg:"Debes llenar todos los campos"})
         if(password !== confirmpassword) return res.status(404).json({msg:"Los passwords no coinciden"})
         const userAppBDD = await userApp.findOne({token})
         if(!userAppBDD) return res.status(404).json({msg:"No se puede validar la cuenta"})
@@ -118,7 +138,7 @@ const login = async(req,res)=>{
         // Paso 1
         const {email,password} = req.body
         // Paso 2
-        if (Object.values(req.body).includes("")) return res.status(404).json({msg:"Debes llenar todos los campos"})
+        if (Object.values(req.body).includes("") || !email || !password) return res.status(404).json({msg:"Debes llenar todos los campos"})
 
         const userAppBDD = await userApp.findOne({email}).select("-status -__v -token -updatedAt -createdAt")
 
@@ -159,24 +179,30 @@ const actualizarPerfil = async (req,res)=>{
 
     try {
         const {id} = req.params
-        const {nombre,apellido,direccion,celular,email} = req.body
+        const {nombre,apellido,direccion,celular} = req.body
         if( !mongoose.Types.ObjectId.isValid(id) ) return res.status(400).json({msg:`ID inválido: ${id}`})
         const userAppBDD = await userApp.findById(id)
-        if(!userAppBDD) return res.status(404).json({ msg: `No existe el veterinario con ID ${id}` })
-        if (Object.values(req.body).includes("")) return res.status(400).json({msg:"Debes llenar todos los campos"})
-        if (userAppBDD.email !== email)
-        {
-            const emailExistente  = await userApp.findOne({email})
-            if (emailExistente )
-            {
-                return res.status(404).json({msg:`El email ya se encuentra registrado`})  
-            }
+        if(!userAppBDD) return res.status(404).json({ msg: `No existe el Usuario con ID ${id}` })
+        if (Object.values(req.body).includes("") || !nombre || !apellido) return res.status(400).json({msg:"Debes llenar todos los campos requeridos"})
+
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+        if (!nameRegex.test(nombre) || !nameRegex.test(apellido)) {
+            return res.status(400).json({msg: "El nombre y apellido solo pueden contener letras"})
         }
+        if(celular.length !== 10){
+
+            return res.status(400).json({ msg : "El número de celular debe contener exáctamente 10 dígitos"})           
+        }
+
+
         userAppBDD.nombre = nombre ?? userAppBDD.nombre
         userAppBDD.apellido = apellido ?? userAppBDD.apellido
         userAppBDD.direccion = direccion ?? userAppBDD.direccion
         userAppBDD.celular = celular ?? userAppBDD.celular
-        userAppBDD.email = email ?? userAppBDD.email
+
         await userAppBDD.save()
         res.status(200).json(userAppBDD)
         
@@ -192,10 +218,13 @@ const actualizarPassword = async (req, res) => {
         const {id} = req.params
         const {passwordActual, confirmPassword, repeatComfirmPassword} = req.body
 
-        if(Object.values(req.body).includes("")) return res.status(404).json({msg:"Debe de llenar todos los campos"})
+        if(Object.values(req.body).includes("") || !passwordActual || !confirmPassword || !repeatComfirmPassword) return res.status(404).json({msg:"Debe de llenar todos los campos"})
         if(!mongoose.Types.ObjectId.isValid(id)) return res.status(404).json({msg:"El id no es valido"})
         const userAppBDD = await userApp.findById(id)
         if(!userAppBDD) return res.status(404).json({msg:`No existe el usuario con ID ${id}`})
+        if (confirmPassword.length < 8) {
+            return res.status(400).json({msg: "La contraseña debe tener al menos 8 caracteres"})
+        }
         const verificarPassword = await userAppBDD.matchPassword(passwordActual)
         if(!verificarPassword) return res.status(404).json({msg:`Lo sentimos, el password actual no es el correcto`})
         if(confirmPassword !== repeatComfirmPassword) return res.status(404).json({msg:`Los password no coinciden`})
