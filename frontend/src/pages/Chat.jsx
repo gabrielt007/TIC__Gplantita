@@ -4,8 +4,14 @@ import storeProfile from "../context/storeProfile"
 import { useFetch } from "../hooks/useFetch"
 import { MdSend, MdSupportAgent, MdSmartToy, MdOutlineQuestionAnswer, MdAutoAwesome } from "react-icons/md"
 
-const rawBackendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000"
-const SOCKET_SERVER_URL = rawBackendUrl.replace(/\/api\/?$/, "")
+const getSocketUrl = () => {
+    const envUrl = import.meta.env.VITE_BACKEND_URL
+    if (envUrl && envUrl.includes("http")) {
+        return envUrl.replace(/\/api\/?$/, "")
+    }
+    return "https://gplantita.chilecentral.cloudapp.azure.com"
+}
+const SOCKET_SERVER_URL = getSocketUrl()
 
 const Chat = () => {
     const { user } = storeProfile()

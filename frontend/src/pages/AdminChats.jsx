@@ -3,8 +3,14 @@ import { io } from "socket.io-client"
 import storeProfile from "../context/storeProfile"
 import { MdSend, MdQuestionAnswer, MdPerson, MdChat } from "react-icons/md"
 
-const rawBackendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000"
-const SOCKET_SERVER_URL = rawBackendUrl.replace(/\/api\/?$/, "")
+const getSocketUrl = () => {
+    const envUrl = import.meta.env.VITE_BACKEND_URL
+    if (envUrl && envUrl.includes("http")) {
+        return envUrl.replace(/\/api\/?$/, "")
+    }
+    return "https://gplantita.chilecentral.cloudapp.azure.com"
+}
+const SOCKET_SERVER_URL = getSocketUrl()
 
 const AdminChats = () => {
     const { user: adminUser } = storeProfile()
