@@ -65,11 +65,7 @@ export const Register = () => {
 
 
     const registerUser = async (dataForm) => {
-        const isRoleAdmin = dataForm.rol === "admin"
-        const url = isRoleAdmin
-            ? `${import.meta.env.VITE_BACKEND_URL}/admin/registro`
-            : `${import.meta.env.VITE_BACKEND_URL}/registro`
-
+        const url = `${import.meta.env.VITE_BACKEND_URL}/registro`
         await fetchDataBackend(url, dataForm, "POST")
     }
 
@@ -87,25 +83,7 @@ export const Register = () => {
                         Crear cuenta
                     </h1>
 
-                    <small className="text-gray-400 block my-4 text-sm">
-                        Por favor ingresa tus datos para registrarte
-                    </small>
-
                     <form onSubmit={handleSubmit(registerUser)}>
-
-                        {/* SELECCIÓN DE ROL */}
-                        <div className="mb-3">
-                            <label className="mb-2 block text-sm font-semibold">
-                                Tipo de Cuenta
-                            </label>
-                            <select
-                                className="block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-500 bg-white focus:ring-1 focus:ring-green-500"
-                                {...register("rol")}
-                            >
-                                <option value="usuario">🌱 Usuario General (Cultivador)</option>
-                                <option value="admin">👑 Administrador</option>
-                            </select>
-                        </div>
 
                         {/* NOMBRE */}
                         <div className="mb-3">

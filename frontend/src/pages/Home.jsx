@@ -12,36 +12,29 @@ import { TbPlant2, TbReportAnalytics } from "react-icons/tb";
 
 export const Home = () => {
     return (
-        <>
-            <header className="container mx-auto h-40 text-center py-4 md:flex justify-between items-center px-4 md:h-15">
+        <div className="scroll-smooth">
+            <header className="container mx-auto h-40 text-center py-4 md:flex justify-between items-center px-4 md:h-15 sticky top-0 bg-white/90 backdrop-blur-md z-50">
                 <h1 className='font-bold text-2xl my-2 text-green-700'>Green<span className='text-black'>HOUSE</span></h1>
                 <ul className='flex gap-5 justify-center my-4 flex-wrap'>
-                    <li><a href="#" className='font-bold hover:text-green-700 hover:underline'>Inicio</a></li>
-                    <li><a href="#" className='font-bold hover:text-green-700 hover:underline'>Nosotros</a></li>
-                    <li><a href="#" className='font-bold hover:text-green-700 hover:underline'>Servicios</a></li>
-                    <li><a href="#" className='font-bold hover:text-green-700 hover:underline'>Contacto</a></li>
+                    <li><a href="#inicio" className='font-bold hover:text-green-700 hover:underline transition-colors'>Inicio</a></li>
+                    <li><a href="#nosotros" className='font-bold hover:text-green-700 hover:underline transition-colors'>Nosotros</a></li>
+                    <li><a href="#servicios" className='font-bold hover:text-green-700 hover:underline transition-colors'>Servicios</a></li>
+                    <li><a href="#contacto" className='font-bold hover:text-green-700 hover:underline transition-colors'>Contacto</a></li>
                 </ul>
                 <ul className='flex justify-center items-center gap-5 my-4'>
                     <li><span className="text-2xl">🌿</span></li>
                 </ul>
             </header>
 
-            <main className='text-center py-6 px-8 bg-green-50 md:text-left md:flex justify-between items-center gap-10 md:py-1'>
+            {/* SECCIÓN INICIO */}
+            <main id="inicio" className='text-center py-6 px-8 bg-green-50 md:text-left md:flex justify-between items-center gap-10 md:py-12 scroll-mt-20'>
                 <div className=''>
                     <h1 className='font-lato font-extrabold text-green-800 uppercase text-4xl my-4 md:text-6xl'>Software inteligente</h1>
                     <p className='font-bold text-left my-8 md:text-2xl underline'>Potenciado por</p>
                     <p className='text-2xl my-6 font-sans'>Inteligencia artificial, monitoreo en tiempo real, alertas de riego y mucho más...</p>
-                    <Link to="/login" className='block bg-green-800 w-40 py-2 mx-auto text-white rounded-2xl text-center sm:mx-0 hover:bg-green-700'>Comenzar</Link>
+                    <Link to="/login" className='block bg-green-800 w-40 py-2 mx-auto text-white rounded-2xl text-center sm:mx-0 hover:bg-green-700 transition-colors shadow-md'>Comenzar</Link>
                     <p className='font-bold text-left my-4 md:text-2xl'>Encuéntranos</p>
                     <div className="flex justify-center gap-4">
-                        {/*<div className="flex items-center gap-2 bg-green-100 px-4 py-2 rounded-lg border border-green-300">
-                            <span className="text-2xl">🌱</span>
-                            <span className="font-semibold text-green-800 text-sm">App Store</span>
-                        </div>
-                        <div className="flex items-center gap-2 bg-green-100 px-4 py-2 rounded-lg border border-green-300">
-                            <span className="text-2xl">🌿</span>
-                            <span className="font-semibold text-green-800 text-sm">Google Play</span>
-                        </div> */}
                     </div>
                 </div>
                 <div className='hidden md:flex items-center justify-center text-[10rem] select-none'>
@@ -49,7 +42,8 @@ export const Home = () => {
                 </div>
             </main>
 
-            <section className='container mx-auto px-4'>
+            {/* SECCIÓN NOSOTROS */}
+            <section id="nosotros" className='container mx-auto px-4 pt-12 scroll-mt-20'>
                 <div className='container mx-auto relative mt-6'>
                     <h2 className='font-semibold text-3xl relative z-1 w-50 text-center mx-auto bg-white'>NOSOTROS</h2>
                     <div className='text-green-900 border-2 absolute top-1/2 w-full z-0' />
@@ -72,7 +66,8 @@ export const Home = () => {
                 </div>
             </section>
 
-            <section className='container mx-auto px-4'>
+            {/* SECCIÓN SERVICIOS */}
+            <section id="servicios" className='container mx-auto px-4 pt-12 scroll-mt-20'>
                 <div className='container mx-auto relative mt-6'>
                     <h2 className='font-semibold text-3xl relative z-1 w-50 text-center mx-auto bg-white'>SERVICIOS</h2>
                     <div className='text-green-900 border-2 absolute top-1/2 w-full z-0' />
@@ -105,7 +100,8 @@ export const Home = () => {
                 </div>
             </section>
 
-            <footer className='bg-green-50 p-6 sm:px-16 sm:py-10 mt-20 rounded-tr-3xl rounded-tl-3xl space-y-8 border-t border-green-200'>
+            {/* SECCIÓN CONTACTO */}
+            <footer id="contacto" className='bg-green-50 p-6 sm:px-16 sm:py-10 mt-20 rounded-tr-3xl rounded-tl-3xl space-y-8 border-t border-green-200 scroll-mt-20'>
                 <div className='flex justify-between items-center border-b border-green-200 pb-4'>
                     <div className='text-3xl font-extrabold text-green-800'>Contáctanos</div>
                     <ul className='flex gap-4'>
@@ -196,6 +192,6 @@ export const Home = () => {
                 <hr className='border-t border-green-200' />
                 <p className='font-semibold text-center text-gray-600 text-sm'>copyright - © - GreenHOUSE</p>
             </footer>
-        </>
+        </div>
     )
 }

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 import storeProfile from "../../context/storeProfile"
 import { useForm } from "react-hook-form"
-import { ToastContainer } from 'react-toastify'
 import { MdEdit, MdCloudUpload } from "react-icons/md"
 
 const FormularioPerfil = () => {
@@ -10,6 +9,7 @@ const FormularioPerfil = () => {
     const { user, updateProfile } = storeProfile()
     const { register, handleSubmit, reset, watch, formState: { errors } } = useForm()
     const [preview, setPreview] = useState(null)
+    const esAdmin = user?.rol === "admin"
 
     const avatarFile = watch("avatar")
 
@@ -22,18 +22,27 @@ const FormularioPerfil = () => {
     }, [avatarFile])
 
     const updateUser = (dataForm) => {
-        const formData = new FormData()
-        formData.append("nombre", dataForm.nombre)
-        formData.append("apellido", dataForm.apellido)
-        formData.append("direccion", dataForm.direccion)
-        formData.append("celular", dataForm.celular)
+        if (esAdmin) {
+            const payload = {
+                nombre: dataForm.nombre,
+                email: dataForm.email
+            }
+            const url = `${import.meta.env.VITE_BACKEND_URL}/admin/actualizarperfil`
+            updateProfile(url, payload)
+        } else {
+            const formData = new FormData()
+            formData.append("nombre", dataForm.nombre)
+            formData.append("apellido", dataForm.apellido)
+            formData.append("direccion", dataForm.direccion)
+            formData.append("celular", dataForm.celular)
 
-        if (dataForm.avatar?.[0]) {
-            formData.append("avatar", dataForm.avatar[0])
+            if (dataForm.avatar?.[0]) {
+                formData.append("avatar", dataForm.avatar[0])
+            }
+
+            const url = `${import.meta.env.VITE_BACKEND_URL}/user/actualizarperfil/${user._id}`
+            updateProfile(url, formData)
         }
-
-        const url = `${import.meta.env.VITE_BACKEND_URL}/user/actualizarperfil/${user._id}`
-        updateProfile(url, formData)
     }
 
     useEffect(() => {
@@ -48,6 +57,56 @@ const FormularioPerfil = () => {
             setPreview(user?.avatar || null)
         }
     }, [user])
+
+    if (esAdmin) {
+        return (
+            <div className="bg-white border border-slate-200/80 p-6 rounded-2xl shadow-xs space-y-5">
+                <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                    <div className="p-2.5 rounded-xl bg-emerald-100 text-emerald-800">
+                        <MdEdit className="text-xl" />
+                    </div>
+                    <div>
+                        <h2 className="text-lg font-bold text-slate-900">Editar Datos del Administrador</h2>
+                        <p className="text-xs text-slate-500">Actualiza tu nombre y correo electrónico oficial.</p>
+                    </div>
+                </div>
+
+                <form onSubmit={handleSubmit(updateUser)} className="space-y-4">
+                    {/* Campo Nombre Administrador */}
+                    <div>
+                        <label className="block text-xs font-bold text-slate-600 uppercase mb-1.5">Nombre del Administrador</label>
+                        <input
+                            type="text"
+                            placeholder="Ingresa tu nombre"
+                            className={inputCls}
+                            {...register("nombre", { required: "El nombre es obligatorio" })}
+                        />
+                        {errors.nombre && <p className="text-rose-600 text-xs mt-1 font-semibold">{errors.nombre.message}</p>}
+                    </div>
+
+                    {/* Campo Correo Electrónico */}
+                    <div>
+                        <label className="block text-xs font-bold text-slate-600 uppercase mb-1.5">Correo Electrónico</label>
+                        <input
+                            type="email"
+                            placeholder="Ingresa tu correo electrónico"
+                            className={inputCls}
+                            {...register("email", { required: "El correo es obligatorio" })}
+                        />
+                        {errors.email && <p className="text-rose-600 text-xs mt-1 font-semibold">{errors.email.message}</p>}
+                    </div>
+
+                    {/* Botón para actualizar el perfil admin */}
+                    <button
+                        type="submit"
+                        className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl py-3 text-sm shadow-md shadow-emerald-900/20 transition-all duration-200 active:scale-[0.99] mt-2 cursor-pointer"
+                    >
+                        Actualizar Datos
+                    </button>
+                </form>
+            </div>
+        )
+    }
 
     return (
         <div className="bg-white border border-slate-200/80 p-6 rounded-2xl shadow-xs space-y-5">

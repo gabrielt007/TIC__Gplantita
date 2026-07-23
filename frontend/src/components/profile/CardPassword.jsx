@@ -12,7 +12,10 @@ const CardPassword = () => {
     const { clearToken } = storeAuth()
 
     const updatePassword = async (dataForm) => {
-        const url = `${import.meta.env.VITE_BACKEND_URL}/user/actualizarpassword/${user._id}`
+        const url = user?.rol === "admin"
+            ? `${import.meta.env.VITE_BACKEND_URL}/admin/actualizarpassword`
+            : `${import.meta.env.VITE_BACKEND_URL}/user/actualizarpassword/${user._id}`
+
         const response = await updatePasswordProfile(url, dataForm)
         if (response) {
             reset()

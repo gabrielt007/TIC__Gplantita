@@ -1,8 +1,49 @@
 import storeProfile from "../../context/storeProfile"
-import { MdPerson, MdEmail, MdPhone, MdLocationOn, MdVerifiedUser } from "react-icons/md"
+import { MdPerson, MdEmail, MdAdminPanelSettings, MdPhone, MdLocationOn, MdVerifiedUser } from "react-icons/md"
 
 export const CardProfile = () => {
     const { user } = storeProfile()
+    const esAdmin = user?.rol === "admin"
+
+    if (esAdmin) {
+        return (
+            <div className="bg-white border border-slate-200/80 p-6 rounded-2xl shadow-xs">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                    
+                    {/* Información del Administrador */}
+                    <div className="space-y-4 w-full">
+                        <div>
+                            <h3 className="text-xl font-bold text-slate-900 leading-tight">
+                                {user?.nombre}
+                            </h3>
+                            <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-50 px-3 py-1 rounded-xl border border-amber-200/60 mt-1.5">
+                                <MdAdminPanelSettings className="text-sm" /> Administrador del Sistema
+                            </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-2 border-t border-slate-100">
+                            <div className="flex items-center gap-2.5 text-slate-700 bg-slate-50/80 p-3.5 rounded-xl border border-slate-100">
+                                <MdPerson className="text-emerald-700 text-xl flex-shrink-0" />
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nombre del Administrador</p>
+                                    <p className="font-bold text-slate-800 text-sm">{user?.nombre}</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2.5 text-slate-700 bg-slate-50/80 p-3.5 rounded-xl border border-slate-100">
+                                <MdEmail className="text-emerald-700 text-xl flex-shrink-0" />
+                                <div className="truncate">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Correo Electrónico</p>
+                                    <p className="font-bold text-slate-800 text-sm truncate">{user?.email}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="bg-white border border-slate-200/80 p-6 rounded-2xl shadow-xs">
@@ -54,7 +95,7 @@ export const CardProfile = () => {
                     </div>
                 </div>
 
-                {/* A la derecha: Foto del Usuario más grande (Sin borde verde) */}
+                {/* A la derecha: Foto del Usuario más grande */}
                 <div className="md:col-span-4 flex flex-col items-center justify-center border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-6">
                     {user?.avatar ? (
                         <img

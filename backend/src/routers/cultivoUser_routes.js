@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registrarCultivo, listarCultivos, detalleCultivo, eliminarCultivo, login, perfil, verificarClaveCultivo } 
+import { registrarCultivo, listarCultivos, detalleCultivo, actualizarCultivo, eliminarCultivo, login, perfil, verificarClaveCultivo } 
 from '../controllers/cultivoUser_controller.js'
 import { verificarTokenJWT } from "../middleware/JWT.js";
 
@@ -13,6 +13,8 @@ routerCultivoUser.post("/cultivo/registro", verificarTokenJWT, registrarCultivo)
 routerCultivoUser.get("/cultivos", verificarTokenJWT, listarCultivos)
 
 routerCultivoUser.get("/cultivo/detalle/:id", verificarTokenJWT, detalleCultivo)
+
+routerCultivoUser.put("/cultivo/actualizar/:id", verificarTokenJWT, actualizarCultivo)
 
 routerCultivoUser.delete("/cultivo/eliminar/:id", verificarTokenJWT, eliminarCultivo)
 

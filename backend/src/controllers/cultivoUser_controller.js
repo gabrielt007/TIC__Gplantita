@@ -120,6 +120,42 @@ const detalleCultivo = async (req, res) => {
     }
 }
 
+const actualizarCultivo = async (req, res) => {
+    try {
+        const { id } = req.params
+        const { nombreCultivo, tipoPlanta, cantidad, detalleCultivo } = req.body
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(404).json({ msg: "Lo sentimos, el cultivo no existe" })
+        }
+
+        if (!nombreCultivo || !tipoPlanta) {
+            return res.status(400).json({ msg: "El nombre y el tipo de planta son obligatorios" })
+        }
+
+        const cultivoBDD = await cultivoUser.findById(id)
+        if (!cultivoBDD) {
+            return res.status(404).json({ msg: "Lo sentimos, el cultivo no existe" })
+        }
+
+        cultivoBDD.nombreCultivo = nombreCultivo.trim()
+        cultivoBDD.tipoPlanta = tipoPlanta.trim()
+        if (cantidad !== undefined) cultivoBDD.cantidad = cantidad
+        if (detalleCultivo !== undefined) cultivoBDD.detalleCultivo = detalleCultivo.trim()
+
+        await cultivoBDD.save()
+
+        res.status(200).json({
+            msg: "Cultivo actualizado correctamente",
+            cultivo: cultivoBDD
+        })
+
+    } catch (error) {
+        console.error("Error al actualizar cultivo:", error)
+        res.status(500).json({ msg: `Error en el servidor - ${error.message}` })
+    }
+}
+
 const eliminarCultivo = async (req, res) => {
     try {
         const { id } = req.params
@@ -226,6 +262,7 @@ export {
     registrarCultivo,
     listarCultivos,
     detalleCultivo,
+    actualizarCultivo,
     eliminarCultivo,
     login,
     perfil,

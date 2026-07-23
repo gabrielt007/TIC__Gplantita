@@ -66,11 +66,80 @@ const login = async (req, res) => {
 // Ver perfil del Admin logueado
 const perfil = (req, res) => {
     try {
-        const { password, token, __v, ...datosAdmin } = req.adminHeader
+        const { password, token, __v, ...datosAdmin } = req.adminHeader.toObject ? req.adminHeader.toObject() : req.adminHeader
         res.status(200).json(datosAdmin)
     } catch (error) {
         console.error(error)
         res.status(500).json({ msg: "Error al obtener el perfil del administrador" })
+    }
+}
+
+// Actualizar datos del perfil del Administrador (nombre, email)
+const actualizarPerfilAdmin = async (req, res) => {
+    try {
+        const { nombre, email } = req.body
+        if (!nombre || !email) {
+            return res.status(400).json({ msg: "El nombre y el correo electrónico son obligatorios" })
+        }
+
+        const adminBDD = await Admin.findById(req.adminHeader._id)
+        if (!adminBDD) {
+            return res.status(404).json({ msg: "El administrador no existe" })
+        }
+
+        if (adminBDD.email !== email) {
+            const emailExistente = await Admin.findOne({ email })
+            if (emailExistente) {
+                return res.status(400).json({ msg: "El correo electrónico ya se encuentra registrado por otro administrador" })
+            }
+        }
+
+        adminBDD.nombre = nombre.trim()
+        adminBDD.email = email.trim()
+        await adminBDD.save()
+
+        res.status(200).json({
+            msg: "Perfil de administrador actualizado correctamente",
+            nombre: adminBDD.nombre,
+            email: adminBDD.email,
+            rol: adminBDD.rol,
+            _id: adminBDD._id
+        })
+
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ msg: `❌ Error en el servidor - ${error.message || error}` })
+    }
+}
+
+// Actualizar contraseña del Administrador
+const actualizarPasswordAdmin = async (req, res) => {
+    try {
+        const { passwordActual, confirmPassword } = req.body
+        const passwordNueva = confirmPassword || req.body?.passwordNuevo
+
+        if (!passwordActual || !passwordNueva) {
+            return res.status(400).json({ msg: "Por favor ingresa tu contraseña actual y la nueva contraseña" })
+        }
+
+        const adminBDD = await Admin.findById(req.adminHeader._id)
+        if (!adminBDD) {
+            return res.status(404).json({ msg: "El administrador no existe" })
+        }
+
+        const verificarPassword = await adminBDD.matchPassword(passwordActual)
+        if (!verificarPassword) {
+            return res.status(401).json({ msg: "La contraseña actual es incorrecta" })
+        }
+
+        adminBDD.password = await adminBDD.encryptPassword(passwordNueva)
+        await adminBDD.save()
+
+        res.status(200).json({ msg: "Contraseña de administrador actualizada exitosamente" })
+
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ msg: `❌ Error en el servidor - ${error.message || error}` })
     }
 }
 
@@ -118,6 +187,8 @@ export {
     registro,
     login,
     perfil,
+    actualizarPerfilAdmin,
+    actualizarPasswordAdmin,
     listarUsuariosActivos,
     desactivarUsuario
 }
