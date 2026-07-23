@@ -73,7 +73,9 @@ const registrarCultivo = async (req, res) => {
 
 const listarCultivos = async (req, res) => {
     try {
-        const cultivos = await cultivoUser.find({ usuario: req.userAppHeader._id }).select("-passwordPropietario -__v -createdAt -updatedAt").populate("usuario", "nombre")
+        const userId = req.userAppHeader?._id
+        const filtro = userId ? { usuario: userId } : {}
+        const cultivos = await cultivoUser.find(filtro).select("-passwordPropietario -__v -createdAt -updatedAt").populate("usuario", "nombre")
 
         res.status(200).json(cultivos)
     } catch (error) {

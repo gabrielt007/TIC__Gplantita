@@ -183,7 +183,8 @@ const login = async (req, res) => {
 }
 
 const perfil = (req, res) => {
-    const { token, confirmEmail, createdAt, updatedAt, __v, ...datosPerfil } = req.userAppHeader
+    const usuarioInfo = req.userAppHeader || req.adminHeader || {}
+    const { token, confirmEmail, createdAt, updatedAt, __v, ...datosPerfil } = usuarioInfo
     res.status(200).json(datosPerfil)
 }
 
