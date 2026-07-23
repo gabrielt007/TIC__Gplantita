@@ -4,7 +4,8 @@ import storeProfile from "../context/storeProfile"
 import { useFetch } from "../hooks/useFetch"
 import { MdSend, MdSupportAgent, MdSmartToy, MdOutlineQuestionAnswer, MdAutoAwesome } from "react-icons/md"
 
-const SOCKET_SERVER_URL = "http://localhost:3000"
+const rawBackendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000"
+const SOCKET_SERVER_URL = rawBackendUrl.replace(/\/api\/?$/, "")
 
 const Chat = () => {
     const { user } = storeProfile()

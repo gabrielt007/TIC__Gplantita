@@ -3,7 +3,8 @@ import { io } from "socket.io-client"
 import storeProfile from "../context/storeProfile"
 import { MdSend, MdQuestionAnswer, MdPerson, MdChat } from "react-icons/md"
 
-const SOCKET_SERVER_URL = "http://localhost:3000"
+const rawBackendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000"
+const SOCKET_SERVER_URL = rawBackendUrl.replace(/\/api\/?$/, "")
 
 const AdminChats = () => {
     const { user: adminUser } = storeProfile()
