@@ -11,15 +11,18 @@ export function useFetch() {
         const loadingToast = toast.loading("Procesando solicitud...")
         setLoading(true)
         try {
-            const response = await axios({
+            const config = {
                 method,
                 url,
-                headers: {
-                    "Content-Type": "application/json",
-                    ...headers,
-                },
-                data,
-            })
+                headers: { ...headers }
+            }
+            if (data !== null && data !== undefined) {
+                config.data = data
+                if (!config.headers["Content-Type"]) {
+                    config.headers["Content-Type"] = "application/json"
+                }
+            }
+            const response = await axios(config)
 
             toast.dismiss(loadingToast)
             if(response?.data?.msg) toast.success(response.data.msg)

@@ -1,147 +1,220 @@
 import { useClima } from "../hooks/useClima"
+import { useFetch } from "../hooks/useFetch"
 import storeProfile from "../context/storeProfile"
+import Carousel from "../components/Carousel"
+import Automatizaciones from "../components/Automatizaciones"
+import { GiSprout, GiWateringCan } from "react-icons/gi"
+import { WiThermometer, WiRain } from "react-icons/wi"
+import { useEffect, useState } from "react"
+import { Navigate } from "react-router"
+
+const DEFAULT_FALLBACK_IMAGES = [
+  'https://images.unsplash.com/photo-1592841200221-a6898f307baa?auto=format&fit=crop&w=600&q=80',
+  'https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?auto=format&fit=crop&w=600&q=80',
+  'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?auto=format&fit=crop&w=600&q=80',
+  'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?auto=format&fit=crop&w=600&q=80'
+]
 
 export default function Panel() {
-
-  const inputCls = "w-full rounded-md border border-gray-300 px-3 py-2 text-gray-700 placeholder-gray-400";
-
-  // ── Obtener el perfil del usuario desde el store de Zustand ────
+  // ── TODOS LOS HOOKS VAN AL INICIO (REGLA FUNDAMENTAL DE REACT) ─────
   const { user } = storeProfile()
+  const { fetchDataBackend } = useFetch()
+  const [cultivosActivos, setCultivosActivos] = useState([])
+  const [cargandoCultivos, setCargandoCultivos] = useState(true)
+  const [actividadesHoy, setActividadesHoy] = useState(0)
 
-  // ── Coordenadas dinámicas desde el perfil del usuario ──────────
-  // user.latitud y user.longitud provienen del modelo userApp del backend.
-  // Mientras el perfil se carga, serán undefined → el hook esperará sin error.
-  const latitud  = user?.latitud  ?? null
-  const longitud = user?.longitud ?? null
-  const API_KEY  = import.meta.env.VITE_OPENWEATHER_API_KEY
+  const latitud = user?.latitud ?? -0.2251
+  const longitud = user?.longitud ?? -78.5123
+  const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY
+  const { clima, cargando: cargandoClima } = useClima(latitud, longitud, API_KEY)
 
-  // ── Obtener datos del clima en tiempo real ─────────────────────
-  const { clima, cargando, error } = useClima(latitud, longitud, API_KEY)
+  const getHeaders = () => {
+    const storedUser = JSON.parse(localStorage.getItem("auth-token"))
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${storedUser?.state?.token}`,
+    }
+  }
+
+  const listCultivosActivos = async () => {
+    if (user?.rol === "admin") return
+    try {
+      const url = `${import.meta.env.VITE_BACKEND_URL}/cultivos`
+      const response = await fetchDataBackend(url, null, "GET", getHeaders())
+      const activos = (response || []).filter(c => {
+        const tieneFechaSalida = Boolean(
+          c?.fechaSalidaCultivo &&
+          c.fechaSalidaCultivo !== null &&
+          c.fechaSalidaCultivo !== "null" &&
+          c.fechaSalidaCultivo !== "" &&
+          c.fechaSalidaCultivo !== undefined
+        )
+        const esActivo = c?.estadoCultivo === true || c?.estadoCultivo === "true"
+        return esActivo && !tieneFechaSalida
+      })
+      setCultivosActivos(activos)
+    } catch (err) {
+      console.error("Error al cargar cultivos en el panel:", err)
+    } finally {
+      setCargandoCultivos(false)
+    }
+  }
+
+  const obtenerActividadesHoy = async () => {
+    if (user?.rol === "admin") return
+    try {
+      const url = `${import.meta.env.VITE_BACKEND_URL}/user/perfil`
+      const res = await fetchDataBackend(url, null, "GET", getHeaders())
+      if (res?.actividades) {
+        // Filtrar o contar actividades
+        setActividadesHoy(res.actividades.length)
+      }
+    } catch (err) {
+      console.error("Error al obtener actividades:", err)
+    }
+  }
+
+  useEffect(() => {
+    if (user?.rol !== "admin") {
+      listCultivosActivos()
+      obtenerActividadesHoy()
+    }
+  }, [user])
+
+  // ── REDIRECCIÓN CONDICIONAL SI ES ADMINISTRADOR (DESPUÉS DE HOOKS) ──
+  if (user?.rol === "admin") {
+    return <Navigate to="/dashboard/chats" replace />
+  }
+
+  // Mapear cultivos reales para el carrusel
+  const carouselItems = cultivosActivos.map((cultivo, idx) => ({
+    id: cultivo._id || idx,
+    title: cultivo.nombreCultivo,
+    description: `${cultivo.tipoPlanta || 'Cultivo activo'} — Cantidad: ${cultivo.cantidad || 1}`,
+    image: cultivo.avatarCultivo || DEFAULT_FALLBACK_IMAGES[idx % DEFAULT_FALLBACK_IMAGES.length],
+    icon: <GiSprout className="h-4 w-4 text-white" />
+  }))
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="space-y-8 max-w-7xl mx-auto">
 
-      <h1 className='font-black text-2xl text-green-700'>Métricas generales del invernadero</h1>
-      <hr className='my-4 border-t-2 border-green-300' />
+      {/* Sección Superior: Métricas (Vertical) + Carrusel de Fotos Reales */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
 
-      {/* Tarjetas de métricas */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-
-        <div className="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
-          <p className="text-sm text-gray-500">🌱 Cultivos activos</p>
-          <p className="text-3xl font-semibold text-gray-800">24</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-400">
-          <p className="text-sm text-gray-500">💧 Riegos hoy</p>
-          <p className="text-3xl font-semibold text-gray-800">8</p>
-        </div>
-
-        {/* Tarjeta de temperatura — ahora con datos en tiempo real */}
-        <div className="bg-white rounded-lg shadow p-4 border-l-4 border-yellow-400">
-          <p className="text-sm text-gray-500">🌡️ Temp. actual (°C)</p>
-          {cargando ? (
-            <p className="text-xl text-gray-400 animate-pulse">Cargando...</p>
-          ) : error ? (
-            <p className="text-sm text-red-500" title={error}>⚠️ Error al obtener clima</p>
-          ) : (
-            <>
-              <p className="text-3xl font-semibold text-gray-800">
-                {clima?.temperatura?.toFixed(1)}°
-              </p>
-              <p className="text-xs text-gray-400 mt-1">
-                {clima?.descripcion} — {clima?.zona}
-              </p>
-            </>
-          )}
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-4 border-l-4 border-purple-400">
-          <p className="text-sm text-gray-500">🌾 Próximas cosechas</p>
-          <p className="text-3xl font-semibold text-gray-800">5</p>
-        </div>
-
-      </section>
-
-      <h1 className='font-black text-2xl text-green-700'>Automatizaciones con IA</h1>
-      <hr className='my-4 border-t-2 border-green-300' />
-
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {/* Formulario: Programar riego */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <h2 className="text-xl font-semibold text-gray-700 mb-3">Programar riego</h2>
-          <hr className="mb-4" />
-          <form className="space-y-3">
-            <div>
-              <label htmlFor="zona" className="text-sm text-gray-600">Zona del invernadero</label>
-              <input id="zona" className={inputCls} placeholder="Ej. Zona A - Tomates" />
-            </div>
-            <div>
-              <label htmlFor="cultivo" className="text-sm text-gray-600">Cultivo</label>
-              <input id="cultivo" className={inputCls} placeholder="Nombre del cultivo" />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label htmlFor="fecha" className="text-sm text-gray-600">Fecha</label>
-                <input id="fecha" type="date" className={inputCls} />
-              </div>
-              <div>
-                <label htmlFor="hora" className="text-sm text-gray-600">Hora</label>
-                <input id="hora" type="time" className={inputCls} />
-              </div>
-            </div>
-            <div>
-              <label htmlFor="notas" className="text-sm text-gray-600">Notas (opcional)</label>
-              <input id="notas" className={inputCls} placeholder="Ej. Riego profundo, fertilizante incluido..." />
-            </div>
-            <button type="button" className="w-full bg-green-800 text-white rounded-md py-2 hover:bg-green-700">
-              Guardar programación
-            </button>
-          </form>
-        </div>
-
-        {/* Riegos del día */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-            <h2 className="text-xl font-semibold text-gray-700">
-              Actividades del día:{" "}
-              <span className="font-normal">
-                {new Date().toLocaleDateString("es-EC")}
-              </span>
-            </h2>
-            <button type="button" className="bg-green-800 text-white rounded-md py-2 px-4 hover:bg-green-700 w-full sm:w-auto">
-              Consultar
-            </button>
+        {/* ── COLUMNA IZQUIERDA: Métricas Rectangulares Verticales ── */}
+        <div className="lg:col-span-7 flex flex-col justify-between space-y-2">
+          <div>
+            <h1 className='font-black text-2xl text-gray-700'>Métricas Generales</h1>
+            <hr className='my-3 border-t-2 border-gray-300' />
           </div>
-          <hr className="mb-4" />
-          <ul className="divide-y">
-            <li className="py-3 flex justify-between">
-              <div>
-                <p className="font-medium text-gray-800">Hora: 07:00</p>
-                <p className="text-sm text-gray-600">Zona: Zona B - Lechugas</p>
-                <p className="text-sm text-gray-600">Cultivo: Lechuga romana</p>
-                <p className="text-sm text-gray-600">Actividad: Riego automático</p>
+
+          {/* Lista Vertical de las 4 Métricas Idénticas a la Imagen */}
+          <div className="flex flex-col gap-3.5 flex-1">
+
+            {/* 1. Cultivos Activos */}
+            <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between group">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-100/90 text-emerald-800 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform flex-shrink-0">
+                  <GiSprout />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-800">Cultivos Activos</p>
+                  <p className="text-[11px] font-semibold text-emerald-600">
+                    {cargandoCultivos ? 'Cargando...' : `${cultivosActivos.length} cultivos registrados`}
+                  </p>
+                </div>
               </div>
-              <span className="text-xs bg-green-100 text-green-700 font-bold px-2 py-1 rounded self-center">
-                Completado
+
+              <span className="text-2xl font-black text-slate-800 pr-2">
+                {cultivosActivos.length}
               </span>
-            </li>
-            <li className="py-3 flex justify-between">
-              <div>
-                <p className="font-medium text-gray-800">Hora: 14:00</p>
-                <p className="text-sm text-gray-600">Zona: Zona A - Tomates</p>
-                <p className="text-sm text-gray-600">Cultivo: Tomate cherry</p>
-                <p className="text-sm text-gray-600">Actividad: Aplicación fertilizante</p>
+            </div>
+
+            {/* 2. Actividades para hoy */}
+            <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between group">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-cyan-100/90 text-cyan-800 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform flex-shrink-0">
+                  <GiWateringCan />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-800">Actividades para hoy</p>
+                  <p className="text-[11px] font-semibold text-cyan-600">
+                    Programadas para la jornada
+                  </p>
+                </div>
               </div>
-              <span className="text-xs bg-yellow-100 text-yellow-700 font-bold px-2 py-1 rounded self-center">
-                Pendiente
+
+              <span className="text-2xl font-black text-slate-800 pr-2">
+                {actividadesHoy}
               </span>
-            </li>
-          </ul>
+            </div>
+
+            {/* 3. Temperatura Clima */}
+            <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between group">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-amber-100/90 text-amber-800 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform flex-shrink-0">
+                  <WiThermometer className="text-3xl" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-800">Temperatura Clima</p>
+                  <p className="text-[11px] font-semibold text-slate-400 capitalize">
+                    {cargandoClima ? 'Cargando...' : (clima?.descripcion || 'Nublado')}
+                  </p>
+                </div>
+              </div>
+
+              <span className="text-2xl font-black text-slate-800 pr-2">
+                {cargandoClima ? '--' : `${clima?.temperatura ?? 11.6}°C`}
+              </span>
+            </div>
+
+            {/* 4. Probabilidad de Lluvia */}
+            <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between group">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-blue-100/90 text-blue-800 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform flex-shrink-0">
+                  <WiRain className="text-3xl" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-800">Probabilidad de Lluvia</p>
+                  <p className="text-[11px] font-semibold text-blue-600">
+                    {(clima?.probLluvia ?? 22) > 40 ? 'Alta probabilidad de lluvia' : 'Baja probabilidad de lluvia'}
+                  </p>
+                </div>
+              </div>
+
+              <span className="text-2xl font-black text-slate-800 pr-2">
+                {cargandoClima ? '--' : `${clima?.probLluvia ?? 22}%`}
+              </span>
+            </div>
+
+          </div>
         </div>
 
-      </section>
+        {/* ── COLUMNA DERECHA: Carrusel de Fotos Reales de los Cultivos ── */}
+        <div className="lg:col-span-5 flex flex-col">
+          <div>
+            <h1 className='font-black text-2xl text-gray-700 flex items-center gap-2'>
+              <span>Vista previa de tus cultivos</span>
+            </h1>
+            <hr className='my-3 border-t-2 border-gray-300' />
+          </div>
+
+          <div className="w-full flex-1 flex items-center justify-center py-2">
+            {carouselItems.length > 0 ? (
+              <Carousel items={carouselItems} autoplay={true} autoplayDelay={1700} loop={true} />
+            ) : (
+              <div className="w-full h-64 rounded-2xl bg-white border border-slate-200/80 flex flex-col items-center justify-center text-slate-400 p-4 text-center">
+                <GiSprout className="text-4xl text-slate-300 mb-2" />
+                <p className="text-xs font-bold">No hay cultivos activos para mostrar</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+      </div>
+
+      {/* Sección Inferior: Automatizaciones y Actividades */}
+      <Automatizaciones />
 
     </div>
   )

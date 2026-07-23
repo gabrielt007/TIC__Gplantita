@@ -1,5 +1,5 @@
 import { Link } from 'react-router'
-import { MdDashboard } from "react-icons/md";
+import { MdDashboard, MdOutlineSensors, MdEmail, MdPhone, MdLocationOn } from "react-icons/md";
 import { FaRobot } from "react-icons/fa";
 import { BsCashCoin } from "react-icons/bs";
 import { FaCommentSms } from "react-icons/fa6";
@@ -8,7 +8,6 @@ import { FaSquareInstagram } from "react-icons/fa6";
 import { FaXTwitter } from "react-icons/fa6";
 import { GiWateringCan, GiThermometerCold } from "react-icons/gi";
 import { TbPlant2, TbReportAnalytics } from "react-icons/tb";
-import { MdOutlineSensors } from "react-icons/md";
 
 
 export const Home = () => {
@@ -106,8 +105,8 @@ export const Home = () => {
                 </div>
             </section>
 
-            <footer className='text-center bg-green-50 p-6 sm:px-20 sm:py-10 mt-20 rounded-tr-3xl rounded-tl-3xl space-y-8'>
-                <div className='flex justify-between items-center'>
+            <footer className='bg-green-50 p-6 sm:px-16 sm:py-10 mt-20 rounded-tr-3xl rounded-tl-3xl space-y-8 border-t border-green-200'>
+                <div className='flex justify-between items-center border-b border-green-200 pb-4'>
                     <div className='text-3xl font-extrabold text-green-800'>Contáctanos</div>
                     <ul className='flex gap-4'>
                         <li>
@@ -115,7 +114,7 @@ export const Home = () => {
                                 href="https://www.facebook.com"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="hover:text-green-700 transition-colors"
+                                className="text-green-800 hover:text-green-600 transition-colors"
                             >
                                 <FaFacebook className='text-2xl' />
                             </a>
@@ -125,7 +124,7 @@ export const Home = () => {
                                 href="https://www.instagram.com"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="hover:text-green-700 transition-colors"
+                                className="text-green-800 hover:text-green-600 transition-colors"
                             >
                                 <FaSquareInstagram className='text-2xl' />
                             </a>
@@ -135,43 +134,67 @@ export const Home = () => {
                                 href="https://x.com"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="hover:text-green-700 transition-colors"
+                                className="text-green-800 hover:text-green-600 transition-colors"
                             >
                                 <FaXTwitter className='text-2xl' />
                             </a>
                         </li>
                     </ul>
                 </div>
-                <div className='flex justify-between items-center'>
-                    <div className='text-left'>
-                        <p className='font-bold my-2'>Email: admin@greenhouse.com</p>
-                        <p className='font-bold'>Teléfono: 0995644186</p>
-                        <p className='font-bold'>Dirección:</p>
+
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch text-left'>
+                    {/* Información de Contacto */}
+                    <div className='space-y-4 bg-white p-6 rounded-2xl shadow-sm border border-green-100 flex flex-col justify-between'>
+                        <h3 className='text-xl font-bold text-green-800 border-b border-green-100 pb-2'>Información de Contacto</h3>
+                        
+                        <div className='flex items-center gap-4 text-gray-700 hover:translate-x-1 transition-transform duration-200'>
+                            <div className='bg-green-100 p-3 rounded-xl text-green-800'>
+                                <MdEmail className='text-2xl' />
+                            </div>
+                            <div>
+                                <p className='text-xs text-gray-500 font-semibold uppercase tracking-wider'>Correo Electrónico</p>
+                                <p className='font-bold text-gray-800 text-sm sm:text-base'>admin@greenhouse.com</p>
+                            </div>
+                        </div>
+
+                        <div className='flex items-center gap-4 text-gray-700 hover:translate-x-1 transition-transform duration-200'>
+                            <div className='bg-green-100 p-3 rounded-xl text-green-800'>
+                                <MdPhone className='text-2xl' />
+                            </div>
+                            <div>
+                                <p className='text-xs text-gray-500 font-semibold uppercase tracking-wider'>Teléfono / WhatsApp</p>
+                                <p className='font-bold text-gray-800 text-sm sm:text-base'>0995644186</p>
+                            </div>
+                        </div>
+
+                        <div className='flex items-center gap-4 text-gray-700 hover:translate-x-1 transition-transform duration-200'>
+                            <div className='bg-green-100 p-3 rounded-xl text-green-800'>
+                                <MdLocationOn className='text-2xl' />
+                            </div>
+                            <div>
+                                <p className='text-xs text-gray-500 font-semibold uppercase tracking-wider'>Ubicación</p>
+                                <p className='font-bold text-gray-800 text-sm sm:text-base'>Escuela Politécnica Nacional, Quito - Ecuador</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Mapa Interactivo */}
+                    <div className='w-full rounded-2xl overflow-hidden shadow-sm border border-green-100 min-h-[240px]'>
                         <iframe
                             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15959.15009985838!2d-78.51237729261271!3d-0.2251148387309881!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91d59a107e1cd44b%3A0x88a284f66939ed4!2sESCUELA%20POLIT%C3%89CNICA%20NACIONAL!5e0!3m2!1ses!2sec!4v1784076726068!5m2!1ses!2sec"
-                            width="230"
-                            height="200"
+                            width="100%"
+                            height="100%"
+                            className="w-full h-64 md:h-full border-0 rounded-2xl"
                             style={{ border: 0 }}
                             allowFullScreen=""
                             loading="lazy"
                             referrerPolicy="strict-origin-when-cross-origin"
                         />
                     </div>
-
-                    <div className='flex-1 sm:max-w-1/2'>
-                        <form action="#" className='w-full p-4'>
-                            <fieldset className='border-2 border-green-900 p-4 rounded-sm'>
-                                <legend className='bg-green-950 w-full text-left text-white pl-2 py-2'>Suscríbete a nuestro boletín</legend>
-                                <div className='flex justify-between gap-4'>
-                                    <input type="email" placeholder="Ingresa tu correo" className='sm:flex-1 border border-gray-300 rounded-md focus:outline-none px-2' />
-                                    <button className='flex-1 sm:max-w-40 border bg-green-950 p-1 rounded-lg text-white'>Enviar</button>
-                                </div>
-                            </fieldset>
-                        </form>
-                    </div>
                 </div>
-                <hr className='border-1 border-green-800' />
-                <p className='font-semibold'>copyright - © - GreenHOUSE</p>
+
+                <hr className='border-t border-green-200' />
+                <p className='font-semibold text-center text-gray-600 text-sm'>copyright - © - GreenHOUSE</p>
             </footer>
         </>
     )

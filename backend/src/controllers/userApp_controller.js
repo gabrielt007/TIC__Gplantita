@@ -1,6 +1,7 @@
 import userApp from "../models/userApp.js";
 import { sendMailToRecoveryPassword, sendMailToRegister } from "../helpers/sendMail.js";
 import { crearTokenJWT } from "../middleware/JWT.js"
+import { subirImagenCloudinary, subirBase64Cloudinary } from '../helpers/uploadCloudinary.js';
 import mongoose from "mongoose"
 
 const registro = async (req, res) => {
@@ -36,6 +37,17 @@ const registro = async (req, res) => {
         }
         const nuevoUserApp = new userApp(req.body)
         nuevoUserApp.password = await nuevoUserApp.encryptPassword(password)
+
+        if (req.files?.imagen || req.files?.avatar) {
+            const file = req.files.imagen || req.files.avatar
+            const { secure_url, public_id } = await subirImagenCloudinary(file.tempFilePath, "Usuarios")
+            nuevoUserApp.avatar = secure_url
+            nuevoUserApp.avatarID = public_id
+        } else if (req.body?.avatar) {
+            const { secure_url } = await subirBase64Cloudinary(req.body.avatar, "Usuarios")
+            nuevoUserApp.avatar = secure_url
+        }
+
         const token = nuevoUserApp.createToken();
         await sendMailToRegister(email, token);
         await nuevoUserApp.save();
@@ -203,6 +215,16 @@ const actualizarPerfil = async (req, res) => {
         userAppBDD.direccion = direccion ?? userAppBDD.direccion
         userAppBDD.celular = celular ?? userAppBDD.celular
 
+        if (req.files?.imagen || req.files?.avatar) {
+            const file = req.files.imagen || req.files.avatar
+            const { secure_url, public_id } = await subirImagenCloudinary(file.tempFilePath, "Usuarios")
+            userAppBDD.avatar = secure_url
+            userAppBDD.avatarID = public_id
+        } else if (req.body?.avatar) {
+            const { secure_url } = await subirBase64Cloudinary(req.body.avatar, "Usuarios")
+            userAppBDD.avatar = secure_url
+        }
+
         await userAppBDD.save()
         res.status(200).json(userAppBDD)
 
@@ -237,6 +259,84 @@ const actualizarPassword = async (req, res) => {
 }
 
 
+const registrarActividad = async (req, res) => {
+    try {
+        const { nombreActividad, nombreCultivo, fecha, hora, estado, descripcion } = req.body
+
+        if (!nombreActividad || !nombreCultivo || !fecha || !hora) {
+            return res.status(400).json({ msg: "Lo sentimos, debes llenar todos los campos requeridos (nombreActividad, nombreCultivo, fecha, hora)" })
+        }
+
+        const userAppBDD = await userApp.findById(req.userAppHeader._id)
+        if (!userAppBDD) {
+            return res.status(404).json({ msg: "Usuario no encontrado" })
+        }
+
+        const nuevaActividad = {
+            _id: new mongoose.Types.ObjectId(),
+            nombreActividad,
+            nombreCultivo,
+            fecha,
+            hora,
+            estado: estado || "Pendiente",
+            descripcion: descripcion || ""
+        }
+
+        userAppBDD.actividades.push(nuevaActividad)
+        await userAppBDD.save()
+
+        res.status(201).json({
+            msg: "Actividad registrada exitosamente",
+            actividad: nuevaActividad
+        })
+
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ msg: `❌ Error en el servidor - ${error.message || error}` })
+    }
+}
+
+const actualizarEstadoActividad = async (req, res) => {
+    try {
+        const { idActividad, estado } = req.body
+
+        if (!idActividad || !estado) {
+            return res.status(400).json({ msg: "Debes proporcionar el id de la actividad y el nuevo estado" })
+        }
+
+        const userAppBDD = await userApp.findById(req.userAppHeader._id)
+        if (!userAppBDD) {
+            return res.status(404).json({ msg: "Usuario no encontrado" })
+        }
+
+        let encontrada = false
+        userAppBDD.actividades = (userAppBDD.actividades || []).map(act => {
+            if (act._id?.toString() === idActividad.toString()) {
+                encontrada = true
+                return { ...act, estado }
+            }
+            return act
+        })
+
+        if (!encontrada) {
+            return res.status(404).json({ msg: "Actividad no encontrada" })
+        }
+
+        userAppBDD.markModified("actividades")
+        await userAppBDD.save()
+
+        res.status(200).json({
+            msg: `Estado de la actividad actualizado a "${estado}"`,
+            actividades: userAppBDD.actividades
+        })
+
+    } catch (error) {
+        console.error("Error al actualizar estado de actividad:", error)
+        res.status(500).json({ msg: `❌ Error en el servidor - ${error.message || error}` })
+    }
+}
+
+
 export {
     registro,
     confirmarMail,
@@ -246,5 +346,7 @@ export {
     login,
     perfil,
     actualizarPerfil,
-    actualizarPassword
+    actualizarPassword,
+    registrarActividad,
+    actualizarEstadoActividad
 }

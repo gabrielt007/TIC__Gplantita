@@ -55,6 +55,20 @@ const userAppSchema = new Schema({
     longitud: {
         type: Number,
         default: null
+    },
+    actividades:{
+        type: Array,
+        default: []
+    },
+    avatar: {
+        type: String,
+        default: null,
+        trim: true
+    },
+    avatarID: {
+        type: String,
+        default: null,
+        trim: true
     }
 }, {
     timestamps: true

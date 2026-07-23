@@ -7,6 +7,7 @@ import cloudinary from "cloudinary";
 import fileUpload from "express-fileupload";
 import routerTratamientos from './routers/tratamiento_routes.js'
 import routerAdmin from './routers/admin_routes.js'
+import routerIA from './routers/ia_routes.js'
 
 
 
@@ -19,8 +20,8 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 app.use(fileUpload({
     useTempFiles: true,
     tempFileDir: './uploads'
@@ -38,5 +39,8 @@ app.use('/api',routerTratamientos)
 
 // Rutas para Administrador
 app.use('/api', routerAdmin)
+
+// Rutas para IA
+app.use('/api', routerIA)
 
 export default app;

@@ -1,100 +1,127 @@
 import { Link, Outlet, useLocation } from 'react-router'
 import storeAuth from '../context/storeAuth'
 import storeProfile from '../context/storeProfile'
-
+import { MdDashboard, MdPerson, MdAddCircleOutline, MdNotificationsActive, MdLogout, MdChat } from "react-icons/md"
+import { TbPlant2 } from "react-icons/tb"
 
 const Dashboard = () => {
     const location = useLocation()
     const urlActual = location.pathname
     const { clearToken } = storeAuth()
-    const{user} = storeProfile()
+    const { user } = storeProfile()
+
+    const esAdmin = user?.rol === "admin"
+
+    const navItems = esAdmin
+        ? [
+            { path: '/dashboard/profile', label: 'Perfil', icon: MdPerson },
+            { path: '/dashboard/chats', label: 'Chats', icon: MdChat },
+          ]
+        : [
+            { path: '/dashboard', label: 'Dashboard', icon: MdDashboard },
+            { path: '/dashboard/profile', label: 'Perfil', icon: MdPerson },
+            { path: '/dashboard/list', label: 'Cultivos', icon: TbPlant2 },
+            { path: '/dashboard/create', label: 'Registrar', icon: MdAddCircleOutline },
+            { path: '/dashboard/chat', label: 'Asistencia', icon: MdNotificationsActive },
+          ]
 
     return (
-        <div className='md:flex md:min-h-screen'>
+        <div className='min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col'>
 
-            {/* Menú de navegación lateral */}
-            <div className='md:w-1/5 bg-green-900 px-5 py-4'>
+            {/* Menú de navegación superior horizontal (Sin fondo verde completo) */}
+            <header className='bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs px-4 md:px-8 py-3.5'>
+                <div className='max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4'>
 
-                <h2 className='text-4xl font-black text-center text-green-100'>GREENHOUSE</h2>
+                    {/* Logo & Usuario Badge */}
+                    <div className='flex items-center gap-3 w-full md:w-auto justify-between md:justify-start'>
+                        <div className='flex items-center gap-2.5'>
+                            <div>
+                                <h1 className='text-3xl font-black tracking-tight text-slate-900 leading-none'>
+                                    Green<span className='text-emerald-600'>HOUSE</span>
+                                </h1>
 
-                <div className="m-auto mt-8 p-1 border-2 border-green-500 rounded-full w-[120px] h-[120px] flex items-center justify-center text-6xl bg-green-800">
-                    🌱
-                </div>
-
-                {/* Nombre de usuario */}
-                <p className='text-green-300 text-center my-4 text-sm'>
-                    <span className='bg-green-400 w-3 h-3 inline-block rounded-full'></span> Bienvenido - {user?.nombre} {user?.apellido} 
-                </p>
-
-                {/* Rol de usuario */}
-                <p className='text-green-300 text-center my-4 text-sm'>Rol - {user?.rol}</p>
-
-                <hr className="mt-5 border-green-600" />
-
-                {/* Enlaces de navegación */}
-                <ul className="mt-5">
-                    <li className="text-center">
-                        <Link to='/dashboard'
-                            className={`${urlActual === '/dashboard' ? 'text-green-100 bg-green-950 px-3 py-2 rounded-md text-center' : 'text-green-500'} text-xl block mt-2 hover:text-green-400`}>
-                            Dashboard
-                        </Link>
-                    </li>
-                    <li className="text-center">
-                        <Link to='/dashboard/profile'
-                            className={`${urlActual === '/dashboard/profile' ? 'text-green-100 bg-green-950 px-3 py-2 rounded-md text-center' : 'text-green-500'} text-xl block mt-2 hover:text-green-400`}>
-                            Perfil
-                        </Link>
-                    </li>
-                    <li className="text-center">
-                        <Link to='/dashboard/list'
-                            className={`${urlActual === '/dashboard/list' ? 'text-green-100 bg-green-950 px-3 py-2 rounded-md text-center' : 'text-green-500'} text-xl block mt-2 hover:text-green-400`}>
-                            Cultivos
-                        </Link>
-                    </li>
-                    <li className="text-center">
-                        <Link to='/dashboard/create'
-                            className={`${urlActual === '/dashboard/create' ? 'text-green-100 bg-green-950 px-3 py-2 rounded-md text-center' : 'text-green-500'} text-xl block mt-2 hover:text-green-400`}>
-                            Registrar
-                        </Link>
-                    </li>
-                    <li className="text-center">
-                        <Link to='/dashboard/chat'
-                            className={`${urlActual === '/dashboard/chat' ? 'text-green-100 bg-green-950 px-3 py-2 rounded-md text-center' : 'text-green-500'} text-xl block mt-2 hover:text-green-400`}>
-                            Alertas
-                        </Link>
-                    </li>
-                </ul>
-
-            </div>
-
-            <div className='flex-1 flex flex-col justify-between h-screen bg-gray-100'>
-
-                {/* Menú de navegación superior */}
-                <div className='bg-green-900 py-2 flex md:justify-end items-center gap-5 justify-center'>
-                    <div className='text-md font-semibold text-green-100'>
-                         Usuario - {user?.nombre}
-                    </div>
-                    <div>
-                        <div className="border-2 border-green-400 rounded-full w-[50px] h-[50px] flex items-center justify-center text-2xl bg-green-800">
-                            🌿
+                            </div>
                         </div>
+
+                        {/* Botón Salir Móvil */}
+                        <Link
+                            to='/'
+                            onClick={() => clearToken()}
+                            className="md:hidden flex items-center gap-1.5 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white border border-rose-200 px-3 py-1.5 rounded-xl transition-all"
+                        >
+                            <MdLogout className='text-sm' />
+                            <span>Salir</span>
+                        </Link>
                     </div>
-                    <div>
-                        <Link to='/' className=" text-white mr-3 text-md block hover:bg-red-900 text-center
-                        bg-red-800 px-4 py-1 rounded-lg" onClick={() => clearToken()}  >Salir</Link>
+
+                    {/* Botones de Navegación Horizontal con fondo verde suave */}
+                    <nav className='flex items-center gap-2 overflow-x-auto w-full md:w-auto py-1 scrollbar-none justify-start md:justify-center'>
+                        {navItems.map((item) => {
+                            const Icon = item.icon
+                            const isActive = urlActual === item.path
+                            return (
+                                <Link
+                                    key={item.path}
+                                    to={item.path}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 ${
+                                        isActive
+                                            ? 'bg-emerald-600 text-white border border-emerald-600 shadow-md shadow-emerald-900/15'
+                                            : 'bg-emerald-50/70 hover:bg-emerald-100/80 text-emerald-900 border border-emerald-200/80 hover:border-emerald-300'
+                                    }`}
+                                >
+                                    <Icon className={`text-base sm:text-lg ${isActive ? 'text-white' : 'text-emerald-700'}`} />
+                                    <span>{item.label}</span>
+                                </Link>
+                            )
+                        })}
+                    </nav>
+
+                    {/* Perfil & Salir (Escritorio) */}
+                    <div className='hidden md:flex items-center gap-3'>
+                        <div className='flex items-center gap-2.5 bg-slate-100/80 px-3 py-1.5 rounded-xl border border-slate-200/80'>
+                            {user?.avatar ? (
+                                <img
+                                    src={user.avatar}
+                                    alt={`Foto de ${user?.nombre}`}
+                                    className="w-7 h-7 rounded-lg object-cover border  shadow-xs"
+                                />
+                            ) : (
+                                <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                                    {user?.nombre ? user.nombre.charAt(0).toUpperCase() : 'U'}
+                                </div>
+                            )}
+                            <div className='text-left'>
+                                <p className='text-xs font-bold text-slate-800 leading-tight'>
+                                    {user?.nombre} {user?.apellido}
+                                </p>
+                                <p className='text-[10px] text-emerald-700 font-semibold capitalize'>
+                                    {user?.rol || 'Usuario'}
+                                </p>
+                            </div>
+                        </div>
+
+                        <Link
+                            to='/'
+                            onClick={() => clearToken()}
+                            className="flex items-center gap-2 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white border border-rose-200 px-3.5 py-2 rounded-xl transition-all duration-200 shadow-xs"
+                        >
+                            <MdLogout className='text-sm' />
+                            <span>Salir</span>
+                        </Link>
                     </div>
-                </div>
 
-                {/* Contenido de las páginas internas */}
-                <div className='overflow-y-scroll p-8'>
-                    <Outlet />
                 </div>
+            </header>
 
-                <div className='bg-green-900 h-12'>
-                    <p className='text-center text-green-100 leading-[2.9rem] underline'>Todos los derechos reservados</p>
-                </div>
+            {/* Contenido Dinámico de las Páginas */}
+            <main className='flex-1 max-w-7xl w-full mx-auto p-4 md:p-8'>
+                <Outlet />
+            </main>
 
-            </div>
+            {/* Footer Inferior */}
+            <footer className='bg-white border-t border-slate-200 py-3.5 text-center text-xs text-slate-500 font-semibold'>
+                GreenHOUSE Platform © {new Date().getFullYear()} — Todos los derechos reservados
+            </footer>
 
         </div>
     )

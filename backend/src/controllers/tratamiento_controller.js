@@ -5,35 +5,38 @@ import mongoose from "mongoose"
 
 const registrarTratamiento = async (req, res) => {
     try {
-        const { nombreCultivo } = req.body
+        const { nombreCultivo, cultivoUser: idCultivo, nivelhumedad, nivelRiego, nivelLuz } = req.body
 
-        if (!req.body || Object.values(req.body).includes("") || !nombreCultivo) {
-            return res.status(400).json({ msg: "Debes llenar todos los campos requeridos" })
+        let cultivoBDD = null
+        if (idCultivo && mongoose.Types.ObjectId.isValid(idCultivo)) {
+            cultivoBDD = await cultivoUser.findById(idCultivo)
+        }
+        if (!cultivoBDD && nombreCultivo) {
+            cultivoBDD = await cultivoUser.findOne({ nombreCultivo })
         }
 
-
-        const cultivoBDD = await cultivoUser.findOne( {nombreCultivo} )
         if (!cultivoBDD) {
             return res.status(404).json({ msg: "Lo sentimos, el cultivo no existe" })
         }
 
-        const idCultivo = cultivoBDD._id
+        const targetId = cultivoBDD._id
 
-        let tratamientoBDD = await Tratamiento.findOne({ cultivoUser: idCultivo })
+        let tratamientoBDD = await Tratamiento.findOne({ cultivoUser: targetId })
 
         if (tratamientoBDD) {
-            // Si ya existe un tratamiento para este cultivo, actualizamos sus campos
-            tratamientoBDD.nivelhumedad = req.body.nivelhumedad ?? tratamientoBDD.nivelhumedad
-            tratamientoBDD.nivelRiego = req.body.nivelRiego ?? tratamientoBDD.nivelRiego
-            tratamientoBDD.nivelLuz = req.body.nivelLuz ?? tratamientoBDD.nivelLuz
+            if (nivelhumedad !== undefined) tratamientoBDD.nivelhumedad = nivelhumedad
+            if (nivelRiego !== undefined) tratamientoBDD.nivelRiego = nivelRiego
+            if (nivelLuz !== undefined) tratamientoBDD.nivelLuz = nivelLuz
             await tratamientoBDD.save()
             return res.status(200).json({ msg: "Tratamiento actualizado exitosamente" })
         }
 
         // Si no existe, creamos el tratamiento y guardamos la relación
         const nuevoTratamiento = new Tratamiento({
-            ...req.body,
-            cultivoUser: idCultivo
+            nivelhumedad,
+            nivelRiego,
+            nivelLuz,
+            cultivoUser: targetId
         })
 
         await nuevoTratamiento.save()

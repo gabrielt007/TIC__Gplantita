@@ -2,72 +2,82 @@ import { useForm } from "react-hook-form"
 import storeProfile from "../../context/storeProfile"
 import storeAuth from "../../context/storeAuth"
 import { ToastContainer } from 'react-toastify'
+import { MdLock } from "react-icons/md"
 
 const CardPassword = () => {
+    const inputCls = "w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all duration-200"
 
-    const { register, handleSubmit, formState: { errors } } = useForm()
-    const {user,updatePasswordProfile} = storeProfile()
+    const { register, handleSubmit, formState: { errors }, reset } = useForm()
+    const { user, updatePasswordProfile } = storeProfile()
     const { clearToken } = storeAuth()
 
     const updatePassword = async (dataForm) => {
         const url = `${import.meta.env.VITE_BACKEND_URL}/user/actualizarpassword/${user._id}`
-        const response = await updatePasswordProfile(url,dataForm)
-        if(response){
+        const response = await updatePasswordProfile(url, dataForm)
+        if (response) {
+            reset()
             clearToken()
         }
     }
+
     return (
-        <>
-            <div className='mt-5'>
-                <h1 className='font-black text-2xl text-gray-500 mt-16'>Actualizar contraseña</h1>
-                <hr className='my-4 border-t-2 border-gray-300' />
+        <div className="bg-white border border-slate-200/80 p-6 rounded-2xl shadow-xs space-y-5">
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                <div className="p-2.5 rounded-xl bg-amber-100 text-amber-800">
+                    <MdLock className="text-xl" />
+                </div>
+                <div>
+                    <h2 className="text-lg font-bold text-slate-900">Seguridad y Contraseña</h2>
+                    <p className="text-xs text-slate-500">Actualiza la clave de acceso a tu cuenta.</p>
+                </div>
             </div>
 
-            {/* Formulario */}
-            <form onSubmit={handleSubmit(updatePassword)}>
-
-                <ToastContainer/>
-
+            <form onSubmit={handleSubmit(updatePassword)} className="space-y-4">
                 {/* Campo contraseña actual */}
                 <div>
-                    <label className="mb-2 block text-sm font-semibold">Contraseña actual</label>
-                    <input type="text" placeholder="Ingresa tu contraseña actual" 
-                    className="block w-full rounded-md border border-gray-300 py-1 px-2 text-gray-500 mb-5"
-                    {...register("passwordActual", { required: "La contraseña actual es obligatoria" })}
+                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1.5">Contraseña actual</label>
+                    <input
+                        type="password"
+                        placeholder="Ingresa tu contraseña actual"
+                        className={inputCls}
+                        {...register("passwordActual", { required: "La contraseña actual es obligatoria" })}
                     />
-                    {errors.passwordActual && <p className="text-red-800">{errors.passwordActual.message}</p>}
+                    {errors.passwordActual && <p className="text-rose-600 text-xs mt-1 font-semibold">{errors.passwordActual.message}</p>}
                 </div>
-
 
                 {/* Campo contraseña nueva */}
                 <div>
-                    <label className="mb-2 block text-sm font-semibold">Nueva contraseña</label>
-                    <input type="text" placeholder="Ingresa la nueva contraseña" 
-                    className="block w-full rounded-md border border-gray-300 py-1 px-2 text-gray-500 mb-5"
-                    {...register("confirmPassword", { required: "La nueva contraseña es obligatoria" })}
+                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1.5">Nueva contraseña</label>
+                    <input
+                        type="password"
+                        placeholder="Ingresa la nueva contraseña"
+                        className={inputCls}
+                        {...register("confirmPassword", { required: "La nueva contraseña es obligatoria" })}
                     />
-                    {errors.confirmPassword && <p className="text-red-800">{errors.confirmPassword.message}</p>}
-                </div>
-                <div>
-                    <label className="mb-2 block text-sm font-semibold">Repita la nueva contraseña</label>
-                    <input type="text" placeholder="Repita la nueva contraseña" 
-                    className="block w-full rounded-md border border-gray-300 py-1 px-2 text-gray-500 mb-5"
-                    {...register("repeatComfirmPassword", { required: "La nueva contraseña es obligatoria" })}
-                    />
-                    {errors.repeatComfirmPassword && <p className="text-red-800">{errors.repeatComfirmPassword.message}</p>}
+                    {errors.confirmPassword && <p className="text-rose-600 text-xs mt-1 font-semibold">{errors.confirmPassword.message}</p>}
                 </div>
 
+                {/* Confirmar nueva contraseña */}
+                <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1.5">Repetir nueva contraseña</label>
+                    <input
+                        type="password"
+                        placeholder="Repite la nueva contraseña"
+                        className={inputCls}
+                        {...register("repeatComfirmPassword", { required: "Debes confirmar la contraseña" })}
+                    />
+                    {errors.repeatComfirmPassword && <p className="text-rose-600 text-xs mt-1 font-semibold">{errors.repeatComfirmPassword.message}</p>}
+                </div>
 
                 {/* Botón para actualizar la contraseña */}
-                <input
+                <button
                     type="submit"
-                    className='bg-gray-800 w-full p-2 text-slate-300 uppercase 
-                    font-bold rounded-lg hover:bg-gray-600 cursor-pointer transition-all'
-                    value='Cambiar'
-                />
-
+                    className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl py-3 text-sm shadow-md shadow-slate-900/10 transition-all duration-200 active:scale-[0.99] mt-2 cursor-pointer"
+                >
+                    Cambiar Contraseña
+                </button>
             </form>
-        </>
+        </div>
     )
 }
 

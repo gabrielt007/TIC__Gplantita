@@ -1,16 +1,17 @@
-/* eslint-disable react/prop-types */
 import { useState } from "react"
 import { useFetch } from "../../hooks/useFetch"
 import { useNavigate } from "react-router"
 import { useForm } from "react-hook-form"
 import { toast, ToastContainer } from "react-toastify"
 import generateAvatar from "../../helpers/consultarIA"
+import storeProfile from "../../context/storeProfile"
 
 const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/2138/2138440.png"
 
 
 export const Form = ({ patient }) => {
 
+    const { user } = storeProfile()
     const [avatar, setAvatar] = useState({
         image: DEFAULT_AVATAR,
         prompt: "",
@@ -26,25 +27,34 @@ export const Form = ({ patient }) => {
 
     // Genera imagen con IA y la inyecta en el formulario
     const handleGenerateImage = async () => {
+        const cropName = watch("nombreCultivo")
+        const promptText = avatar.prompt || cropName || "cultivo verde en invernadero"
 
         setAvatar(prev => ({ ...prev, loading: true }))
 
         try {
-            const blob = await generateAvatar(avatar.prompt)
+            const blob = await generateAvatar(promptText)
 
-            const isImage = blob?.type?.startsWith("image/")
-            if (!isImage) throw new Error("No es una imagen válida")
-
-            const file = new File([blob], "avatar.png", { type: blob.type })
+            const file = new File([blob], `cultivo_ia_${Date.now()}.png`, { type: blob.type || "image/png" })
             const imageUrl = URL.createObjectURL(blob)
 
-            setAvatar(prev => ({ ...prev, image: imageUrl, loading: false }))
-            setValue("imagen", [file])
+            // Liberar memoria de la imagen previa si existía
+            if (avatar.image && avatar.image.startsWith("blob:")) {
+                URL.revokeObjectURL(avatar.image)
+            }
+
+            setAvatar({
+                prompt: avatar.prompt,
+                image: imageUrl,
+                loading: false
+            })
+            setValue("imagen", [file], { shouldValidate: true, shouldDirty: true })
+            toast.success("¡Nueva imagen generada exitosamente con IA!")
 
         } catch (error) {
             console.error(error)
-            toast.error("Error al generar la imagen")
-            setAvatar(prev => ({ ...prev, image: DEFAULT_AVATAR, loading: false }))
+            toast.error("Error al generar la imagen con IA")
+            setAvatar(prev => ({ ...prev, loading: false }))
         }
     }
 
@@ -64,6 +74,14 @@ export const Form = ({ patient }) => {
             }
         })
 
+        // Auto-asignar propietario desde la sesión activa del usuario
+        if (!dataForm.nombrePropietario) {
+            formData.append("nombrePropietario", `${user?.nombre || 'Usuario'} ${user?.apellido || ''}`.trim())
+        }
+        if (!dataForm.emailPropietario) {
+            formData.append("emailPropietario", user?.email || "usuario@gplantita.com")
+        }
+
         const storedUser = JSON.parse(localStorage.getItem("auth-token"))
         const headers = {
             "Content-Type": "multipart/form-data",
@@ -81,9 +99,14 @@ export const Form = ({ patient }) => {
         }
 
         if (response) {
+            if (response.claveAcceso) {
+                toast.info(`🔑 Clave de Acceso generada para este cultivo: ${response.claveAcceso}`, {
+                    autoClose: 10000
+                })
+            }
             setTimeout(() => {
                 navigate("/dashboard/list")
-            }, 2000)
+            }, 3500)
         }
     }
 
@@ -91,39 +114,6 @@ export const Form = ({ patient }) => {
         <form onSubmit={handleSubmit(registerCultivo)}>
 
             <ToastContainer />
-
-            {/* ─── Sección: Información del propietario ─── */}
-            <fieldset className="border-2 border-gray-500 p-6 rounded-lg shadow-lg">
-
-                <legend className="text-xl font-bold text-gray-700 bg-gray-200 px-4 py-1 rounded-md">
-                    Información del propietario
-                </legend>
-
-                {/* Nombre del propietario */}
-                <div className="mb-5">
-                    <label className="mb-2 block text-sm font-semibold">Nombre completo</label>
-                    <input
-                        type="text"
-                        placeholder="Ingresa el nombre del propietario"
-                        className="block w-full rounded-md border border-gray-300 py-1 px-2 text-gray-500"
-                        {...register("nombrePropietario", { required: "El nombre del propietario es obligatorio" })}
-                    />
-                    {errors.nombrePropietario && <p className="text-red-800 text-sm mt-1">{errors.nombrePropietario.message}</p>}
-                </div>
-
-                {/* Correo del propietario */}
-                <div className="mb-5">
-                    <label className="mb-2 block text-sm font-semibold">Correo electrónico</label>
-                    <input
-                        type="email"
-                        placeholder="Ingresa el correo del propietario"
-                        className="block w-full rounded-md border border-gray-300 py-1 px-2 text-gray-500"
-                        {...register("emailPropietario", { required: "El correo del propietario es obligatorio" })}
-                    />
-                    {errors.emailPropietario && <p className="text-red-800 text-sm mt-1">{errors.emailPropietario.message}</p>}
-                </div>
-
-            </fieldset>
 
 
             {/* ─── Sección: Información del cultivo ─── */}
@@ -182,56 +172,7 @@ export const Form = ({ patient }) => {
                 </div>
 
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
-
-                    {/* Nivel de humedad */}
-                    <div>
-                        <label className="mb-2 block text-sm font-semibold">Nivel de humedad</label>
-                        <select
-                            className="block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-700"
-                            defaultValue=""
-                            {...register("nivelhumedad", { required: "El nivel de humedad es obligatorio" })}
-                        >
-                            <option value="">--- Seleccionar ---</option>
-                            <option value="bajo">Bajo</option>
-                            <option value="medio">Medio</option>
-                            <option value="alto">Alto</option>
-                        </select>
-                        {errors.nivelhumedad && <p className="text-red-800 text-sm mt-1">{errors.nivelhumedad.message}</p>}
-                    </div>
-
-                    {/* Nivel de riego */}
-                    <div>
-                        <label className="mb-2 block text-sm font-semibold">Nivel de riego</label>
-                        <select
-                            className="block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-700"
-                            defaultValue=""
-                            {...register("nivelRiego", { required: "El nivel de riego es obligatorio" })}
-                        >
-                            <option value="">--- Seleccionar ---</option>
-                            <option value="bajo">Bajo</option>
-                            <option value="medio">Medio</option>
-                            <option value="alto">Alto</option>
-                        </select>
-                        {errors.nivelRiego && <p className="text-red-800 text-sm mt-1">{errors.nivelRiego.message}</p>}
-                    </div>
-
-                    {/* Nivel de luz */}
-                    <div>
-                        <label className="mb-2 block text-sm font-semibold">Nivel de luz</label>
-                        <select
-                            className="block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-700"
-                            defaultValue=""
-                            {...register("nivelLuz", { required: "El nivel de luz es obligatorio" })}
-                        >
-                            <option value="">--- Seleccionar ---</option>
-                            <option value="bajo">Bajo</option>
-                            <option value="medio">Medio</option>
-                            <option value="alto">Alto</option>
-                        </select>
-                        {errors.nivelLuz && <p className="text-red-800 text-sm mt-1">{errors.nivelLuz.message}</p>}
-                    </div>
-                </div>
+                
 
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">

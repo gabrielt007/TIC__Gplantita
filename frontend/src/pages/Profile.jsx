@@ -3,51 +3,45 @@ import { CardProfile } from '../components/profile/CardProfile'
 import { CardProfileOwner } from '../components/profile/CardProfileOwner'
 import FormProfile from '../components/profile/FormProfile'
 import storeProfile from '../context/storeProfile'
-
+import { ToastContainer } from 'react-toastify'
 
 const Profile = () => {
-
     const { user } = storeProfile()
 
     return (
-        <>
+        <div className="space-y-6 max-w-7xl mx-auto pb-10">
+            <ToastContainer autoClose={3000} />
             <div>
-                <h1 className='font-black text-4xl text-gray-500'>Perfil</h1>
-                <hr className='my-4'/>
-                <p className='mb-8'>Este módulo te permite gestionar el perfil del usuario</p>
+                <h1 className='font-black text-2xl text-gray-700'>Perfil de Usuario</h1>
+                <hr className='my-3 border-t-2 border-gray-300' />
+                <p className='text-xs text-slate-500 font-medium'>
+                    Gestiona tu información personal y los parámetros de seguridad de tu cuenta.
+                </p>
             </div>
 
-            {
-                user?.rol === "cultivo"
+            {user?.rol === "cultivo" ? (
+                /* Propietario del cultivo → solo muestra su tarjeta de datos */
+                <div className='flex justify-center'>
+                    <div className='w-full max-w-lg'>
+                        <CardProfileOwner />
+                    </div>
+                </div>
+            ) : (
+                <div className='space-y-6'>
+                    {/* 1. Tarjeta Superior: Información a la izquierda y Foto grande sin borde a la derecha */}
+                    <CardProfile />
 
-                    // Propietario del cultivo → solo muestra su tarjeta de datos
-                    ? (
-                        <div className='flex justify-center'>
-                            <div className='w-full md:w-1/3'>
-                                <CardProfileOwner />
-                            </div>
-                        </div>
-                    )
+                    {/* 2. Sección Inferior: Formularios uno al lado del otro */}
+                    <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 items-start'>
+                        {/* Formulario Editar Datos Personales */}
+                        <FormProfile />
 
-                    // Administrador (usuario) → muestra formulario + card + cambiar contraseña
-                    : (
-                        <div className='flex justify-around gap-x-8 flex-wrap gap-y-8 md:flex-nowrap'>
-
-                            {/* Formulario para editar perfil */}
-                            <div className='w-full md:w-1/2'>
-                                <FormProfile />
-                            </div>
-
-                            {/* Card con datos del perfil y cambio de contraseña */}
-                            <div className='w-full md:w-1/2'>
-                                <CardProfile />
-                                <CardPassword />
-                            </div>
-
-                        </div>
-                    )
-            }
-        </>
+                        {/* Formulario Cambiar Contraseña */}
+                        <CardPassword />
+                    </div>
+                </div>
+            )}
+        </div>
     )
 }
 

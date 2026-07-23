@@ -1,10 +1,11 @@
 import { useState } from "react"
 import { MdVisibility, MdVisibilityOff } from "react-icons/md"
 import { Link, useNavigate } from "react-router"
-import {useFetch} from '../hooks/useFetch'
-import { ToastContainer } from 'react-toastify'
+import { useFetch } from '../hooks/useFetch'
+import { ToastContainer, toast } from 'react-toastify'
 import { useForm } from 'react-hook-form'
 import storeAuth from "../context/storeAuth"
+import axios from "axios"
 
 
 const Login = () => {
@@ -14,15 +15,49 @@ const Login = () => {
     const  {fetchDataBackend,loading} = useFetch()
     const { setToken, setRol } = storeAuth()
 
-    const loginUser = async(dataForm) => {
-        const url = dataForm.password.startsWith("GH")
-            ? `${import.meta.env.VITE_BACKEND_URL}/cultivo/login`
-            : `${import.meta.env.VITE_BACKEND_URL}/user/login`
-        const response = await fetchDataBackend(url, dataForm,'POST')
-        if(response){
-            setToken(response.token)
-            setRol(response.rol)
-            navigate('/dashboard')
+    const loginUser = async (dataForm) => {
+        if (dataForm.password.startsWith("GH")) {
+            const url = `${import.meta.env.VITE_BACKEND_URL}/cultivo/login`
+            const response = await fetchDataBackend(url, dataForm, 'POST')
+            if (response) {
+                setToken(response.token)
+                setRol(response.rol)
+                navigate('/dashboard')
+            }
+            return
+        }
+
+        try {
+            // Intentar primero con el login de usuario general
+            const urlUser = `${import.meta.env.VITE_BACKEND_URL}/user/login`
+            const response = await axios.post(urlUser, dataForm)
+            if (response?.data) {
+                toast.success(response.data.msg || "¡Bienvenido!")
+                setToken(response.data.token)
+                setRol(response.data.rol)
+                navigate('/dashboard')
+                return
+            }
+        } catch (errorUser) {
+            // Si el usuario no existe en userApp (404), intentamos autenticar como Administrador
+            if (errorUser.response?.status === 404) {
+                try {
+                    const urlAdmin = `${import.meta.env.VITE_BACKEND_URL}/admin/login`
+                    const responseAdmin = await axios.post(urlAdmin, dataForm)
+                    if (responseAdmin?.data) {
+                        toast.success(responseAdmin.data.msg || "¡Bienvenido Administrador!")
+                        setToken(responseAdmin.data.token)
+                        setRol(responseAdmin.data.rol)
+                        navigate('/dashboard/chats')
+                        return
+                    }
+                } catch (errorAdmin) {
+                    toast.error(errorAdmin.response?.data?.msg || errorUser.response?.data?.msg || "Credenciales incorrectas")
+                    return
+                }
+            } else {
+                toast.error(errorUser.response?.data?.msg || "Error al iniciar sesión")
+            }
         }
     }
 

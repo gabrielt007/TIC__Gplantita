@@ -1,44 +1,45 @@
-import { MdDeleteForever, MdInfo, MdPublishedWithChanges } from "react-icons/md"
 import { useFetch } from "../../hooks/useFetch"
 import { useEffect, useState } from "react"
-import { useNavigate } from "react-router"
 import { ToastContainer } from "react-toastify"
-
+import CardCultivo from "./CardCultivo"
 
 const Table = () => {
-
     const { fetchDataBackend } = useFetch()
     const [cultivos, setCultivos] = useState([])
-    const navigate = useNavigate()
+    const [cargando, setCargando] = useState(true)
 
     const getHeaders = () => {
         const storedUser = JSON.parse(localStorage.getItem("auth-token"))
         return {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${storedUser.state.token}`,
+            Authorization: `Bearer ${storedUser?.state?.token}`,
         }
     }
 
     // ── Listar cultivos ──────────────────────────────────────────
     const listCultivos = async () => {
-        const url = `${import.meta.env.VITE_BACKEND_URL}/cultivos`
-        const response = await fetchDataBackend(url, null, "GET", getHeaders())
-        setCultivos(response || [])
+        setCargando(true)
+        try {
+            const url = `${import.meta.env.VITE_BACKEND_URL}/cultivos`
+            const response = await fetchDataBackend(url, null, "GET", getHeaders())
+            setCultivos(response || [])
+        } catch (err) {
+            console.error("Error al cargar cultivos:", err)
+        } finally {
+            setCargando(false)
+        }
     }
 
-    // ── Eliminar cultivo ─────────────────────────────────────────
+    // ── Eliminar / Dar salida a cultivo ───────────────────────────
     const deleteCultivo = async (id) => {
-        const confirmDelete = confirm("¿Estás seguro de eliminar este cultivo?")
+        const confirmDelete = confirm("¿Estás seguro de dar salida / eliminar este cultivo?")
         if (!confirmDelete) return
 
         const url = `${import.meta.env.VITE_BACKEND_URL}/cultivo/eliminar/${id}`
-        const data = {
-            tiempoCosecha: new Date().toISOString()   // El backend lo requiere obligatorio
-        }
-        const response = await fetchDataBackend(url, data, "DELETE", getHeaders())
+        const response = await fetchDataBackend(url, null, "DELETE", getHeaders())
 
         if (response) {
-            // Quita el cultivo eliminado de la lista sin recargar la página
+            // Quita el cultivo de la vista sin recargar la página
             setCultivos(prev => prev.filter(cultivo => cultivo._id !== id))
         }
     }
@@ -47,79 +48,60 @@ const Table = () => {
         listCultivos()
     }, [])
 
+    // ── Filtrado Robusto en la lista ────────────────────────────
+    // Se muestran todos los cultivos que no cuentan con fechaSalidaCultivo establecida
+    const cultivosVisibles = cultivos.filter(cultivo => {
+        const tieneFechaSalida = Boolean(
+            cultivo?.fechaSalidaCultivo &&
+            cultivo.fechaSalidaCultivo !== null &&
+            cultivo.fechaSalidaCultivo !== "null" &&
+            cultivo.fechaSalidaCultivo !== "" &&
+            cultivo.fechaSalidaCultivo !== undefined
+        )
 
-    if (cultivos.length === 0) {
+        return !tieneFechaSalida
+    })
+
+    if (cargando) {
+        return (
+            <div className="text-center py-16 text-slate-400 font-semibold animate-pulse">
+                Cargando cultivos...
+            </div>
+        )
+    }
+
+    if (cultivosVisibles.length === 0) {
         return (
             <>
                 <ToastContainer />
-                <div className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50
-                dark:bg-gray-800 dark:text-red-400" role="alert">
-                    <span className="font-medium">No existen registros de cultivos</span>
+                <div className="bg-white rounded-2xl p-10 border-2 border-black shadow-md text-center space-y-3">
+                    <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-3xl mx-auto">
+                        🌱
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-800">No hay cultivos registrados en proceso</h3>
+                    <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                        Todos los cultivos registrados cuentan con fecha de salida establecida.
+                    </p>
                 </div>
             </>
         )
     }
 
     return (
-        <>
+        <div className="space-y-6">
             <ToastContainer />
 
-            <table className="w-full mt-5 table-auto shadow-lg bg-white">
-
-                {/* Encabezado */}
-                <thead className="bg-gray-800 text-slate-400">
-                    <tr>
-                        {["N°", "Cultivo", "Propietario", "Email", "Tipo", "Estado", "Acciones"].map((header) => (
-                            <th key={header} className="p-2">{header}</th>
-                        ))}
-                    </tr>
-                </thead>
-
-                {/* Cuerpo de la tabla */}
-                <tbody>
-                    {cultivos.map((cultivo, index) => (
-                        <tr className="hover:bg-gray-100 text-center" key={cultivo._id}>
-
-                            <td className="p-2">{index + 1}</td>
-                            <td className="p-2">{cultivo.nombreCultivo}</td>
-                            <td className="p-2">{cultivo.nombrePropietario}</td>
-                            <td className="p-2">{cultivo.emailPropietario}</td>
-                            <td className="p-2 capitalize">{cultivo.tipoPlanta}</td>
-
-                            <td className="p-2">
-                                <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${
-                                    cultivo.estadoCultivo
-                                        ? "bg-green-100 text-green-700"
-                                        : "bg-yellow-100 text-yellow-700"
-                                }`}>
-                                    {cultivo.estadoCultivo ? "Cosechado" : "En curso"}
-                                </span>
-                            </td>
-
-                            <td className="py-2 text-center">
-                                <MdInfo
-                                    title="Más información"
-                                    className="h-7 w-7 text-slate-800 cursor-pointer inline-block mr-2 hover:text-green-600"
-                                    onClick={() => navigate(`/dashboard/details/${cultivo._id}`)}
-                                />
-                                <MdPublishedWithChanges
-                                    title="Actualizar"
-                                    className="h-7 w-7 text-slate-800 cursor-pointer inline-block mr-2 hover:text-blue-600"
-                                    onClick={() => navigate(`/dashboard/update/${cultivo._id}`)}
-                                />
-                                <MdDeleteForever
-                                    title="Eliminar"
-                                    className="h-7 w-7 text-red-900 cursor-pointer inline-block hover:text-red-600"
-                                    onClick={() => deleteCultivo(cultivo._id)}
-                                />
-                            </td>
-
-                        </tr>
-                    ))}
-                </tbody>
-
-            </table>
-        </>
+            {/* Grid de Cards de Cultivos */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {cultivosVisibles.map((cultivo) => (
+                    <CardCultivo
+                        key={cultivo._id}
+                        cultivo={cultivo}
+                        onDelete={deleteCultivo}
+                    />
+                ))}
+            </div>
+        </div>
     )
 }
 

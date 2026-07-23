@@ -13,6 +13,7 @@ import Details from './pages/Details'
 import Create from './pages/Create'
 import Update from './pages/Update'
 import Chat from './pages/Chat'
+import AdminChats from './pages/AdminChats'
 import Reset from './pages/Reset'
 import Panel from './pages/Panel'
 import PublicRoute from './routes/PublicRoute'
@@ -60,6 +61,7 @@ function App() {
             <Route path='create' element={<Create />} />
             <Route path='update/:id' element={<Update />} />
             <Route path='chat' element={<Chat />} />
+            <Route path='chats' element={<AdminChats />} />
           </Route>
 
       </Routes>

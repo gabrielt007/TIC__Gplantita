@@ -9,18 +9,22 @@ import userApp from '../models/userApp.js';
 const registrarCultivo = async (req, res) => {
     try {
         //paso1
-        const { nombreCultivo } = req.body
-        if (Object.values(req.body).includes("")) {
-            return res.status(400).json({ msg: "Lo sentimos, debes llenar todos los campos del formulario" })
+        const { nombreCultivo, tipoPlanta } = req.body
+        if (!nombreCultivo || !tipoPlanta) {
+            return res.status(400).json({ msg: "Por favor completa el nombre y tipo del cultivo" })
         }
 
-        //paso2
-        const cultivoExiste = await cultivoUser.findOne({ nombreCultivo })
+        // Paso 2: Verificar si el nombre del cultivo ya existe para este usuario
+        const cultivoExiste = await cultivoUser.findOne({ 
+            nombreCultivo: nombreCultivo.trim(),
+            usuario: req.userAppHeader._id 
+        })
 
-        if (cultivoExiste) return res.status(400).json({ msg: "Lo sentimos, el nombre del cultivo ya existe" })
+        if (cultivoExiste) {
+            return res.status(400).json({ msg: "Ya tienes un cultivo registrado con ese nombre" })
+        }
 
-
-        const password = Math.random().toString(36).toUpperCase().slice(2, 5)
+        const password = Math.random().toString(36).substring(2, 8).toUpperCase()
 
         const nuevoCultivo = new cultivoUser({
             ...req.body,
@@ -38,31 +42,38 @@ const registrarCultivo = async (req, res) => {
             nuevoCultivo.avatarCultivo = secure_url
         }
 
-        const user = await userApp.findById(req.userAppHeader._id)
-        if (!user) {
-            return res.status(404).json({ msg: "Usuario no encontrado" })
+        // Guardar cultivo en BDD
+        await nuevoCultivo.save()
+
+        // Intentar enviar correo con la clave de acceso
+        try {
+            const user = await userApp.findById(req.userAppHeader._id)
+            const correoDestino = user?.email || req.body?.emailPropietario
+            if (correoDestino) {
+                console.log(`📧 Enviando correo con la clave [${password}] a ${correoDestino}...`)
+                await sendMailToOwner(correoDestino, password, user?.nombre || 'Cultivador')
+            } else {
+                console.log("⚠️ No se encontró email para enviar la clave de acceso del cultivo.")
+            }
+        } catch (mailErr) {
+            console.error("Aviso: No se pudo enviar el correo pero el cultivo fue registrado:", mailErr)
         }
 
-        const emailUsuario = user.email
-        const nombreUsuario = user.nombre
-
-        await sendMailToOwner(emailUsuario, password, nombreUsuario)
-
-        await nuevoCultivo.save();
-        res.status(200).json({ msg: "Cultivo registrado exitosamente, revisa tu correo para obtener tu clave de acceso al cultivo" })
-
-
+        res.status(200).json({ 
+            msg: `Cultivo registrado exitosamente. Tu clave de acceso enviada al correo es: ${password}`,
+            claveAcceso: password
+        })
 
     } catch (error) {
-        console.log(error)
-        res.status(500).json({ msg: "Error al registrar el cultivo" })
+        console.error("Error en registrarCultivo:", error)
+        res.status(500).json({ msg: `Error al registrar el cultivo: ${error.message}` })
     }
 
 }
 
 const listarCultivos = async (req, res) => {
     try {
-        const cultivos = await cultivoUser.find({ estadoCultivo: true, usuario: req.userAppHeader._id }).select("-passwordPropietario -__v -createdAt -updatedAt").populate("usuario", "nombre")
+        const cultivos = await cultivoUser.find({ usuario: req.userAppHeader._id }).select("-passwordPropietario -__v -createdAt -updatedAt").populate("usuario", "nombre")
 
         res.status(200).json(cultivos)
     } catch (error) {
@@ -82,22 +93,29 @@ const detalleCultivo = async (req, res) => {
             return res.status(404).json({ msg: "Lo sentimos, el cultivo no existe" })
         }
 
-        const cultivoBDD = await cultivoUser.findById(id).select(
-            "nombrePropietario nombreCultivo tipoPlanta cantidad fechaSalidaCultivo estadoMadurezCultivo fechaIngresoCultivo estadoCultivo detalleCultivo avatarCultivo usuario tratamientos"
-        )
-        // Paso 2 — Verificar que el cultivo exista en la BDD
+        const cultivoBDD = await cultivoUser.findById(id).populate("usuario", "nombre email").populate("tratamientos")
         if (!cultivoBDD) {
             return res.status(404).json({ msg: "Lo sentimos, el cultivo no existe" })
         }
 
-        const tratamientos = await Tratamiento.find().where('cultivoUser').equals(id)
-        cultivoBDD.tratamientos = [...tratamientos]
+        const tratamientosBDD = await Tratamiento.find({ cultivoUser: id })
+        const cultivoObj = cultivoBDD.toObject()
 
-        // Paso 4 — Responder con los datos del cultivo
-        res.status(200).json(cultivoBDD)
+        // Asignar array de tratamientos
+        cultivoObj.tratamientos = tratamientosBDD.length > 0 ? tratamientosBDD : (cultivoObj.tratamientos || [])
+
+        // Si existen tratamientos, mapear los valores mas recientes de nivelhumedad, nivelRiego y nivelLuz
+        if (cultivoObj.tratamientos.length > 0) {
+            const ultimoTratamiento = cultivoObj.tratamientos[cultivoObj.tratamientos.length - 1]
+            cultivoObj.nivelhumedad = ultimoTratamiento.nivelhumedad || cultivoObj.nivelhumedad || null
+            cultivoObj.nivelRiego = ultimoTratamiento.nivelRiego || cultivoObj.nivelRiego || null
+            cultivoObj.nivelLuz = ultimoTratamiento.nivelLuz || cultivoObj.nivelLuz || null
+        }
+
+        res.status(200).json(cultivoObj)
 
     } catch (error) {
-        console.error(error)
+        console.error("Error al obtener detalle del cultivo:", error)
         res.status(500).json({ msg: "Error al obtener el cultivo" })
     }
 }
@@ -108,14 +126,18 @@ const eliminarCultivo = async (req, res) => {
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(404).json({ msg: "Lo sentimos, el cultivo no existe" })
         }
-        const cultivoEliminado = await cultivoUser.findByIdAndUpdate(id, { estadoCultivo: false, fechaSalidaCultivo: Date.now() })
+        const cultivoEliminado = await cultivoUser.findByIdAndUpdate(
+            id, 
+            { estadoCultivo: false, fechaSalidaCultivo: new Date() },
+            { new: true }
+        )
         if (!cultivoEliminado) {
             return res.status(404).json({ msg: "Lo sentimos, el cultivo no existe" })
         }
 
-        res.status(200).json({ msg: "Cultivo eliminado correctamente" })
+        res.status(200).json({ msg: "Cultivo dado de salida / eliminado correctamente", cultivo: cultivoEliminado })
     } catch (error) {
-        console.error(error)
+        console.error("Error al eliminar cultivo:", error)
         res.status(500).json({ msg: "Error al eliminar el cultivo" })
     }
 }
@@ -162,7 +184,43 @@ const perfil = (req, res) => {
     }
 }
 
+const verificarClaveCultivo = async (req, res) => {
+    try {
+        const { id } = req.params
+        const { passwordPropietario } = req.body
 
+        if (!passwordPropietario) {
+            return res.status(400).json({ msg: "Ingresa la clave de acceso para continuar" })
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(404).json({ msg: "Lo sentimos, el cultivo no existe" })
+        }
+
+        const cultivoBDD = await cultivoUser.findById(id)
+        if (!cultivoBDD) {
+            return res.status(404).json({ msg: "Lo sentimos, el cultivo no existe" })
+        }
+
+        // Comparar clave ingresada con la clave encriptada en la BDD
+        const esValida = await cultivoBDD.matchPassword(passwordPropietario)
+        if (!esValida) {
+            return res.status(400).json({ msg: "La clave de acceso ingresada es incorrecta" })
+        }
+
+        // Si es correcta, actualizar estadoCultivo a true
+        cultivoBDD.estadoCultivo = true
+        await cultivoBDD.save()
+
+        res.status(200).json({
+            msg: "Clave de acceso verificada correctamente. Tu cultivo ha sido activado.",
+            cultivo: cultivoBDD
+        })
+    } catch (error) {
+        console.error("Error al verificar clave del cultivo:", error)
+        res.status(500).json({ msg: `Error en el servidor - ${error.message}` })
+    }
+}
 
 export {
     registrarCultivo,
@@ -170,5 +228,6 @@ export {
     detalleCultivo,
     eliminarCultivo,
     login,
-    perfil
+    perfil,
+    verificarClaveCultivo
 }

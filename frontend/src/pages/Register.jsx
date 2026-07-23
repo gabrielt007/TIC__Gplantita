@@ -65,12 +65,10 @@ export const Register = () => {
 
 
     const registerUser = async (dataForm) => {
-
-        console.log(dataForm)
-
-        const url = `${import.meta.env.VITE_BACKEND_URL}/registro`
-
-        console.log(url)
+        const isRoleAdmin = dataForm.rol === "admin"
+        const url = isRoleAdmin
+            ? `${import.meta.env.VITE_BACKEND_URL}/admin/registro`
+            : `${import.meta.env.VITE_BACKEND_URL}/registro`
 
         await fetchDataBackend(url, dataForm, "POST")
     }
@@ -94,6 +92,20 @@ export const Register = () => {
                     </small>
 
                     <form onSubmit={handleSubmit(registerUser)}>
+
+                        {/* SELECCIÓN DE ROL */}
+                        <div className="mb-3">
+                            <label className="mb-2 block text-sm font-semibold">
+                                Tipo de Cuenta
+                            </label>
+                            <select
+                                className="block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-500 bg-white focus:ring-1 focus:ring-green-500"
+                                {...register("rol")}
+                            >
+                                <option value="usuario">🌱 Usuario General (Cultivador)</option>
+                                <option value="admin">👑 Administrador</option>
+                            </select>
+                        </div>
 
                         {/* NOMBRE */}
                         <div className="mb-3">
@@ -188,7 +200,7 @@ export const Register = () => {
                         {/* BUSCADOR DE UBICACIÓN */}
                         <div className="mb-3 relative">
                             <label className="mb-2 block text-sm font-semibold">
-                                Buscar Ubicación
+                                Buscar Ubicación del invernadero
                             </label>
                             <div className="flex gap-2">
                                 <input
